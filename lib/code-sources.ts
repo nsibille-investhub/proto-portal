@@ -1186,3 +1186,94 @@ export default function ValidationPage() {
   );
 }
 `;
+
+export const PROFILE_PAGE_CODE = `'use client';
+import { useSearchParams } from 'next/navigation';
+import { Card, Form, Input, Select, Button, Typography, Divider } from 'antd';
+import {
+  MailOutlined, LockOutlined, PhoneOutlined, GlobalOutlined,
+  UserOutlined, BankOutlined, SafetyCertificateOutlined, EyeInvisibleOutlined,
+} from '@ant-design/icons';
+import { userProfiles } from '@/data/mock';
+
+const { Title, Text } = Typography;
+
+const COUNTRIES = [
+  'France', 'Belgique', 'Suisse', 'Luxembourg', 'Monaco',
+  'Allemagne', 'Royaume-Uni', 'Espagne', 'Italie', 'Pays-Bas',
+];
+
+export default function ProfilePage() {
+  const searchParams = useSearchParams();
+  const persona = searchParams.get('persona') ?? 'lp';
+  const profile = persona === 'distributor' ? userProfiles.distributor : userProfiles.lp;
+
+  return (
+    <div style={{ maxWidth: 720, margin: '0 auto' }}>
+      {/* Identifiants de connexion */}
+      <Card style={{ borderRadius: 12, border: '1px solid var(--ih-border)', marginBottom: 24 }}>
+        <Title level={5}>Identifiants de connexion</Title>
+        <Form layout="vertical" requiredMark={false}>
+          <Form.Item label="Email">
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Input prefix={<MailOutlined />} value={profile.email} disabled style={{ flex: 1 }} />
+              <Button type="primary">Modifier</Button>
+            </div>
+          </Form.Item>
+          <Form.Item label="Mot de passe">
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Input.Password
+                prefix={<LockOutlined />}
+                value={"••••••••"}
+                disabled
+                iconRender={() => <EyeInvisibleOutlined />}
+                style={{ flex: 1 }}
+              />
+              <Button type="primary">Modifier</Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Card>
+
+      {/* Détails du contact */}
+      <Card style={{ borderRadius: 12, border: '1px solid var(--ih-border)', marginBottom: 24 }}>
+        <Title level={5}>Détails du contact</Title>
+        <Form layout="vertical" requiredMark={false}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+            <Form.Item label="Prénom">
+              <Input prefix={<UserOutlined />} defaultValue={profile.firstName} />
+            </Form.Item>
+            <Form.Item label="Nom">
+              <Input prefix={<UserOutlined />} defaultValue={profile.lastName} />
+            </Form.Item>
+          </div>
+          <Form.Item label="Numéro de téléphone">
+            <Input prefix={<PhoneOutlined />} defaultValue={profile.phone} />
+          </Form.Item>
+          <Form.Item label="Pays">
+            <Select
+              defaultValue={profile.country}
+              suffixIcon={<GlobalOutlined />}
+              options={COUNTRIES.map(c => ({ value: c, label: c }))}
+            />
+          </Form.Item>
+          {persona === 'distributor' && 'company' in profile && (
+            <>
+              <Divider />
+              <Form.Item label="Société">
+                <Input prefix={<BankOutlined />} defaultValue={profile.company} />
+              </Form.Item>
+              <Form.Item label="N° ORIAS">
+                <Input prefix={<SafetyCertificateOutlined />} defaultValue={profile.orias} />
+              </Form.Item>
+            </>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+            <Button type="primary" size="large">Sauvegarder</Button>
+          </div>
+        </Form>
+      </Card>
+    </div>
+  );
+}
+`;

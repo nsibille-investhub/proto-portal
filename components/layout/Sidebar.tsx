@@ -112,19 +112,27 @@ export function Sidebar() {
 
       {/* Bottom user actions */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '8px 0' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '9px 20px',
-            color: 'rgba(255,255,255,0.6)',
-            cursor: 'pointer',
-            fontSize: 13.5,
-          }}
+        <Link
+          href={persona !== 'lp' ? `/profile?persona=${persona}` : '/profile'}
+          style={{ textDecoration: 'none' }}
         >
-          <span>Profil</span>
-        </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '9px 20px',
+              color: pathname === '/profile' ? 'white' : 'rgba(255,255,255,0.6)',
+              background: pathname === '/profile' ? 'rgba(255,255,255,0.08)' : 'transparent',
+              fontWeight: pathname === '/profile' ? 600 : 400,
+              cursor: 'pointer',
+              fontSize: 13.5,
+              transition: 'all 0.15s',
+            }}
+          >
+            <span>Profil</span>
+          </div>
+        </Link>
         <div
           style={{
             display: 'flex',

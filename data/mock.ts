@@ -229,6 +229,27 @@ export const partners = [
   { id: 3, name: 'Fontaine Invest', email: 'contact@fontaine-invest.fr', activatedFunds: ['Impact Growth II'], investorsCount: 3, subscriptionsCount: 2, status: 'pending' as const, siren: '456 789 123', orias: '12 009 012', city: 'Bordeaux' },
 ];
 
+export const userProfiles = {
+  lp: {
+    email: 'cyril.chomette@investhub.cloud',
+    firstName: 'Cyril',
+    lastName: 'Chomette',
+    phone: '0033660432754',
+    country: 'France',
+    role: 'LP' as const,
+  },
+  distributor: {
+    email: 'marie.laurent@patrimoine-conseil.fr',
+    firstName: 'Marie',
+    lastName: 'Laurent',
+    phone: '0033145789012',
+    country: 'France',
+    company: 'Cabinet Laurent & Associés',
+    orias: '12 003 456',
+    role: 'Distributeur' as const,
+  },
+};
+
 export const navPerformance = Array.from({ length: 24 }, (_, i) => {
   const date = new Date(2024, i, 1);
   return {
