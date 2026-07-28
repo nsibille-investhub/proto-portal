@@ -250,6 +250,92 @@ export const userProfiles = {
   },
 };
 
+export const notificationTypes = [
+  { value: 'capital_calls', label: 'Appels de fonds' },
+  { value: 'reporting', label: 'Reporting trimestriel / annuel' },
+  { value: 'distributions', label: 'Distributions' },
+  { value: 'documents', label: 'Nouveaux documents' },
+  { value: 'subscriptions', label: 'Souscriptions' },
+  { value: 'secondary_market', label: 'Marché secondaire' },
+  { value: 'nav_updates', label: 'Mises à jour NAV' },
+  { value: 'compliance', label: 'Conformité / KYC' },
+];
+
+export const structures = [
+  { value: 'sci_chomette', label: 'SCI Chomette Patrimoine' },
+  { value: 'holding_cc', label: 'Holding CC Invest' },
+  { value: 'pp_chomette', label: 'Cyril Chomette (personne physique)' },
+];
+
+export interface LpContact {
+  id: number;
+  lastName: string;
+  firstName: string;
+  email: string;
+  phone: string;
+  language: 'fr' | 'en';
+  hasPortalAccess: boolean;
+  structures: string[] | 'all';
+  fundRestrictions: string[] | 'all';
+  subscriptionRestrictions: number[] | 'all';
+  notifications: string[] | 'all';
+}
+
+export const lpContacts: LpContact[] = [
+  {
+    id: 1,
+    lastName: 'Cavallaro',
+    firstName: 'Deborah',
+    email: 'deborah.cavallaro+65@investhub.cloud',
+    phone: '+33 6 12 34 56 78',
+    language: 'fr',
+    hasPortalAccess: true,
+    structures: ['sci_chomette', 'holding_cc'],
+    fundRestrictions: ['Impact Growth II', 'Flex II'],
+    subscriptionRestrictions: [1, 3],
+    notifications: ['capital_calls', 'reporting', 'distributions'],
+  },
+  {
+    id: 2,
+    lastName: 'Moreau',
+    firstName: 'Antoine',
+    email: 'antoine.moreau@cabinet-gestion.fr',
+    phone: '+33 1 45 67 89 01',
+    language: 'fr',
+    hasPortalAccess: true,
+    structures: 'all',
+    fundRestrictions: 'all',
+    subscriptionRestrictions: 'all',
+    notifications: 'all',
+  },
+  {
+    id: 3,
+    lastName: 'Bernard',
+    firstName: 'Sophie',
+    email: 'sophie.bernard@notaire-bernard.fr',
+    phone: '+33 4 78 90 12 34',
+    language: 'fr',
+    hasPortalAccess: false,
+    structures: [],
+    fundRestrictions: [],
+    subscriptionRestrictions: [],
+    notifications: [],
+  },
+  {
+    id: 4,
+    lastName: 'Fischer',
+    firstName: 'Thomas',
+    email: 'thomas.fischer@compliance-partners.eu',
+    phone: '+33 6 98 76 54 32',
+    language: 'en',
+    hasPortalAccess: true,
+    structures: ['pp_chomette'],
+    fundRestrictions: ['Venture I', 'Fonds Secondaire'],
+    subscriptionRestrictions: [4, 5],
+    notifications: ['compliance', 'documents', 'nav_updates'],
+  },
+];
+
 export const navPerformance = Array.from({ length: 24 }, (_, i) => {
   const date = new Date(2024, i, 1);
   return {

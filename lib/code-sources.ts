@@ -1277,3 +1277,21 @@ export default function ProfilePage() {
   );
 }
 `;
+
+export const CONTACTS_PAGE_CODE = `'use client';
+// Page "Mes contacts supplémentaires" — vue LP uniquement
+// Tableau avec colonnes : Nom, Email, Communications, Restrictions Fonds/Souscriptions/Structures, Actions
+// Actions : Modifier, Supprimer, Réinitialiser le mot de passe
+// Modale ajout/édition avec accès portail conditionnel :
+//   - Si "Accès espace investisseur" activé :
+//     - Structures (multi-select ou "Toutes les structures")
+//     - Fonds (multi-select ou "Tous les fonds")
+//     - Souscriptions (multi-select ou "Toutes les souscriptions")
+//     - Notifications (multi-select ou "Toutes les notifications")
+
+import { Table, Button, Dropdown, Modal, Form, Input, Select, Checkbox, Switch, Tag } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined, EllipsisOutlined } from '@ant-design/icons';
+import { lpContacts, funds, subscriptions, notificationTypes, structures } from '@/data/mock';
+
+// Voir le code source complet dans app/contacts/page.tsx
+`;
