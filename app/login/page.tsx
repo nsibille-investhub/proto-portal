@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Form, Input, Button, Typography, Divider, Segmented, message } from 'antd';
+import { Form, Input, Button, Typography, Divider, Segmented } from 'antd';
 import { UserOutlined, LockOutlined, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
 
@@ -27,6 +27,8 @@ export default function LoginPage() {
     }, 800);
   }
 
+  const isDistributor = portalType === 'distributor';
+
   return (
     <div
       style={{
@@ -38,7 +40,6 @@ export default function LoginPage() {
         overflow: 'hidden',
       }}
     >
-      {/* Background image — brutaliste architecture */}
       <div
         style={{
           position: 'absolute',
@@ -57,7 +58,6 @@ export default function LoginPage() {
         }}
       />
 
-      {/* Login card */}
       <div
         style={{
           position: 'relative',
@@ -78,7 +78,8 @@ export default function LoginPage() {
                 <rect x="16" y="2" width="4" height="28" rx="1" fill="var(--ih-primary)" />
                 <rect x="23" y="8" width="4" height="22" rx="1" fill="var(--ih-primary)" />
               </svg>
-              InvestHub<sup style={{ fontSize: 12, verticalAlign: 'super' }}>&reg;</sup>
+              {'InvestHub'}
+              <sup style={{ fontSize: 12, verticalAlign: 'super' }}>{'®'}</sup>
             </span>
           </div>
         </div>
@@ -134,7 +135,7 @@ export default function LoginPage() {
 
           <div style={{ textAlign: 'right', marginTop: -8, marginBottom: 20 }}>
             <Button type="link" style={{ padding: 0, fontSize: 13, color: 'var(--ih-primary)' }}>
-              Mot de passe oubli&eacute; ?
+              {'Mot de passe oublié ?'}
             </Button>
           </div>
 
@@ -162,7 +163,7 @@ export default function LoginPage() {
         <Button
           block
           size="large"
-          onClick={() => router.push('/register')}
+          onClick={() => router.push(isDistributor ? '/register?type=distributor' : '/register')}
           style={{
             borderRadius: 8,
             height: 44,
@@ -172,12 +173,12 @@ export default function LoginPage() {
             color: 'var(--ih-primary)',
           }}
         >
-          {portalType === 'distributor' ? 'Devenir distributeur' : 'Not an LP yet ?'}
+          {isDistributor ? 'Devenir distributeur' : 'Not an LP yet ?'}
         </Button>
 
         <div style={{ textAlign: 'center', marginTop: 28 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            InvestHub.cloud &copy; {new Date().getFullYear()}
+            {'InvestHub.cloud © ' + new Date().getFullYear()}
           </Text>
         </div>
       </div>

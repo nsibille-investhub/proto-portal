@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Form, Input, Button, Typography, Select, Checkbox, Divider, Steps, message, Progress,
+  Form, Input, Button, Typography, Select, Checkbox, Divider, Steps, Progress,
 } from 'antd';
 import {
   UserOutlined, MailOutlined, PhoneOutlined, LockOutlined,
   EyeInvisibleOutlined, EyeOutlined, ArrowLeftOutlined, CheckCircleFilled,
+  BankOutlined, GlobalOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
 
@@ -27,19 +28,28 @@ const COUNTRIES = [
   { value: 'NL', label: 'Pays-Bas' },
   { value: 'PT', label: 'Portugal' },
   { value: 'MC', label: 'Monaco' },
-  { value: 'SG', label: 'Singapore' },
-  { value: 'AE', label: 'United Arab Emirates' },
+  { value: 'SG', label: 'Singapour' },
+  { value: 'AE', label: 'Emirats arabes unis' },
   { value: 'OTHER', label: 'Autre' },
 ];
 
 const HOW_DID_YOU_HEAR = [
-  { value: 'gp_referral', label: 'Recommandation d\'un GP / Gérant' },
+  { value: 'gp_referral', label: "Recommandation d'un GP / Gérant" },
   { value: 'advisor', label: 'Mon conseiller financier' },
-  { value: 'event', label: 'Un événement / conférence' },
-  { value: 'press', label: 'Presse / médias' },
+  { value: 'event', label: "Un événement / conférence" },
+  { value: 'press', label: "Presse / médias" },
   { value: 'linkedin', label: 'LinkedIn' },
   { value: 'web_search', label: 'Recherche web' },
-  { value: 'word_of_mouth', label: 'Bouche à oreille' },
+  { value: 'word_of_mouth', label: "Bouche à oreille" },
+  { value: 'other', label: 'Autre' },
+];
+
+const DISTRIBUTOR_TYPES = [
+  { value: 'cgp', label: 'CGP (Conseil en Gestion de Patrimoine)' },
+  { value: 'family_office', label: 'Family Office' },
+  { value: 'bank', label: 'Banque privée' },
+  { value: 'insurance', label: 'Compagnie d’assurance' },
+  { value: 'broker', label: 'Courtier' },
   { value: 'other', label: 'Autre' },
 ];
 
@@ -57,100 +67,9 @@ function getPasswordStrength(pw: string): { pct: number; label: string; color: s
   return { pct: 100, label: 'Excellent', color: '#52c41a' };
 }
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const { login } = useAuth();
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(0);
-  const [password, setPassword] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  const pwStrength = getPasswordStrength(password);
-
-  function handleNext() {
-    const fieldsStep0 = ['email', 'firstName', 'lastName', 'phone', 'country'];
-    const fieldsStep1 = ['password', 'confirmPassword', 'howDidYouHear', 'isProfessional', 'acceptCgu'];
-
-    const fields = step === 0 ? fieldsStep0 : fieldsStep1;
-    form.validateFields(fields).then(() => {
-      if (step === 0) {
-        setStep(1);
-      } else {
-        handleSubmit();
-      }
-    });
-  }
-
-  function handleSubmit() {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-    }, 1200);
-  }
-
-  function handleGoToPortal() {
-    login();
-    router.push('/home');
-  }
-
-  if (success) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage: 'url(https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=1920&q=80)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'brightness(0.55) saturate(0.7)',
-          }}
-        />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(13,61,86,0.4) 0%, rgba(0,0,0,0.3) 100%)' }} />
-
-        <div style={{ position: 'relative', width: 480, background: '#fff', borderRadius: 16, padding: '56px 40px', boxShadow: '0 24px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
-          <CheckCircleFilled style={{ fontSize: 56, color: '#52c41a', marginBottom: 20 }} />
-          <Title level={3} style={{ marginBottom: 8 }}>Compte cr&eacute;&eacute; avec succ&egrave;s</Title>
-          <Text type="secondary" style={{ fontSize: 15, display: 'block', marginBottom: 32 }}>
-            Votre compte investisseur a &eacute;t&eacute; cr&eacute;&eacute;. Vous pouvez maintenant acc&eacute;der &agrave; votre espace personnel.
-          </Text>
-          <Button
-            type="primary"
-            size="large"
-            block
-            onClick={handleGoToPortal}
-            style={{ borderRadius: 8, height: 46, fontWeight: 600, fontSize: 15 }}
-          >
-            Acc&eacute;der &agrave; mon espace
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
+function BackgroundLayer() {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Background */}
+    <>
       <div
         style={{
           position: 'absolute',
@@ -162,8 +81,83 @@ export default function RegisterPage() {
         }}
       />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(13,61,86,0.4) 0%, rgba(0,0,0,0.3) 100%)' }} />
+    </>
+  );
+}
 
-      {/* Registration card */}
+function RegisterContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login } = useAuth();
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(0);
+  const [password, setPassword] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const isDistributor = searchParams.get('type') === 'distributor';
+  const pwStrength = getPasswordStrength(password);
+
+  function handleNext() {
+    const fieldsStep0 = isDistributor
+      ? ['email', 'firstName', 'lastName', 'phone', 'country', 'companyName', 'distributorType']
+      : ['email', 'firstName', 'lastName', 'phone', 'country'];
+    const fieldsStep1 = isDistributor
+      ? ['password', 'confirmPassword', 'acceptCgu']
+      : ['password', 'confirmPassword', 'howDidYouHear', 'isProfessional', 'acceptCgu'];
+
+    const fields = step === 0 ? fieldsStep0 : fieldsStep1;
+    form.validateFields(fields).then(() => {
+      if (step === 0) {
+        setStep(1);
+      } else {
+        setLoading(true);
+        setTimeout(() => {
+          setLoading(false);
+          setSuccess(true);
+        }, 1200);
+      }
+    });
+  }
+
+  function handleGoToPortal() {
+    login();
+    router.push(isDistributor ? '/home?persona=distributor' : '/home');
+  }
+
+  if (success) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        <BackgroundLayer />
+        <div style={{ position: 'relative', width: 480, background: '#fff', borderRadius: 16, padding: '56px 40px', boxShadow: '0 24px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
+          <CheckCircleFilled style={{ fontSize: 56, color: '#52c41a', marginBottom: 20 }} />
+          <Title level={3} style={{ marginBottom: 8 }}>
+            {"Compte créé avec succès"}
+          </Title>
+          <Text type="secondary" style={{ fontSize: 15, display: 'block', marginBottom: 32 }}>
+            {isDistributor
+              ? "Votre compte distributeur a été créé. Vous pouvez maintenant accéder à votre espace partenaire."
+              : "Votre compte investisseur a été créé. Vous pouvez maintenant accéder à votre espace personnel."
+            }
+          </Text>
+          <Button
+            type="primary"
+            size="large"
+            block
+            onClick={handleGoToPortal}
+            style={{ borderRadius: 8, height: 46, fontWeight: 600, fontSize: 15 }}
+          >
+            {"Accéder à mon espace"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+      <BackgroundLayer />
+
       <div
         style={{
           position: 'relative',
@@ -186,15 +180,20 @@ export default function RegisterPage() {
                 <rect x="16" y="2" width="4" height="28" rx="1" fill="var(--ih-primary)" />
                 <rect x="23" y="8" width="4" height="22" rx="1" fill="var(--ih-primary)" />
               </svg>
-              InvestHub<sup style={{ fontSize: 10, verticalAlign: 'super' }}>&reg;</sup>
+              {"InvestHub®"}
             </span>
           </div>
         </div>
 
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <Title level={4} style={{ margin: 0 }}>Cr&eacute;er un compte investisseur</Title>
+          <Title level={4} style={{ margin: 0 }}>
+            {isDistributor ? "Créer un compte distributeur" : "Créer un compte investisseur"}
+          </Title>
           <Text type="secondary" style={{ fontSize: 13 }}>
-            Remplissez le formulaire pour acc&eacute;der &agrave; votre espace
+            {isDistributor
+              ? "Remplissez le formulaire pour accéder à votre espace partenaire"
+              : "Remplissez le formulaire pour accéder à votre espace"
+            }
           </Text>
         </div>
 
@@ -204,7 +203,7 @@ export default function RegisterPage() {
           style={{ marginBottom: 28 }}
           items={[
             { title: 'Informations' },
-            { title: 'S&eacute;curit&eacute; & CGU' },
+            { title: "Sécurité & CGU" },
           ]}
         />
 
@@ -216,7 +215,7 @@ export default function RegisterPage() {
                 label="Adresse email"
                 rules={[
                   { required: true, message: 'Adresse email requise' },
-                  { type: 'email', message: 'Format d\'email invalide' },
+                  { type: 'email', message: "Format d'email invalide" },
                 ]}
               >
                 <Input
@@ -230,12 +229,12 @@ export default function RegisterPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
                 <Form.Item
                   name="firstName"
-                  label="Pr&eacute;nom"
-                  rules={[{ required: true, message: 'Prénom requis' }]}
+                  label="Prénom"
+                  rules={[{ required: true, message: "Prénom requis" }]}
                 >
                   <Input
                     prefix={<UserOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
-                    placeholder="Pr&eacute;nom"
+                    placeholder="Prénom"
                     size="large"
                     style={{ borderRadius: 8 }}
                   />
@@ -255,8 +254,8 @@ export default function RegisterPage() {
 
               <Form.Item
                 name="phone"
-                label="Num&eacute;ro de t&eacute;l&eacute;phone"
-                rules={[{ required: true, message: 'Numéro de téléphone requis' }]}
+                label="Numéro de téléphone"
+                rules={[{ required: true, message: "Numéro de téléphone requis" }]}
               >
                 <Input
                   prefix={<PhoneOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
@@ -268,20 +267,65 @@ export default function RegisterPage() {
 
               <Form.Item
                 name="country"
-                label="Pays de r&eacute;sidence"
+                label="Pays de résidence"
                 rules={[{ required: true, message: 'Pays requis' }]}
               >
                 <Select
-                  placeholder="S&eacute;lectionnez votre pays"
+                  placeholder="Sélectionnez votre pays"
                   options={COUNTRIES}
                   size="large"
                   showSearch
                   filterOption={(input, option) =>
                     (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                   }
-                  style={{ borderRadius: 8 }}
                 />
               </Form.Item>
+
+              {isDistributor && (
+                <>
+                  <Divider style={{ margin: '8px 0 16px' }} />
+                  <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 16 }}>
+                    {"Informations société"}
+                  </Text>
+
+                  <Form.Item
+                    name="companyName"
+                    label="Raison sociale"
+                    rules={[{ required: true, message: 'Raison sociale requise' }]}
+                  >
+                    <Input
+                      prefix={<BankOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
+                      placeholder="Nom de votre cabinet / structure"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="distributorType"
+                    label="Type de structure"
+                    rules={[{ required: true, message: 'Type requis' }]}
+                  >
+                    <Select
+                      placeholder="Sélectionnez votre type"
+                      options={DISTRIBUTOR_TYPES}
+                      size="large"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="website"
+                    label="Site web"
+                  >
+                    <Input
+                      prefix={<GlobalOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
+                      placeholder="https://www.votresite.com"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                    />
+                  </Form.Item>
+                </>
+              )}
             </>
           )}
 
@@ -292,13 +336,13 @@ export default function RegisterPage() {
                 label="Mot de passe"
                 rules={[
                   { required: true, message: 'Mot de passe requis' },
-                  { min: 8, message: 'Minimum 8 caractères' },
+                  { min: 8, message: "Minimum 8 caractères" },
                   {
                     validator: (_, value) => {
                       if (!value) return Promise.resolve();
                       if (!/[A-Z]/.test(value)) return Promise.reject('Au moins une majuscule');
                       if (!/[0-9]/.test(value)) return Promise.reject('Au moins un chiffre');
-                      if (!/[^A-Za-z0-9]/.test(value)) return Promise.reject('Au moins un caractère spécial');
+                      if (!/[^A-Za-z0-9]/.test(value)) return Promise.reject("Au moins un caractère spécial");
                       return Promise.resolve();
                     },
                   },
@@ -306,7 +350,7 @@ export default function RegisterPage() {
               >
                 <Input.Password
                   prefix={<LockOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
-                  placeholder="Cr&eacute;ez votre mot de passe"
+                  placeholder="Créez votre mot de passe"
                   size="large"
                   style={{ borderRadius: 8 }}
                   iconRender={(visible) => visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
@@ -323,7 +367,7 @@ export default function RegisterPage() {
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
                     <Text style={{ fontSize: 11, color: pwStrength.color }}>{pwStrength.label}</Text>
-                    <Text type="secondary" style={{ fontSize: 10 }}>Min. 8 car., 1 majuscule, 1 chiffre, 1 sp&eacute;cial</Text>
+                    <Text type="secondary" style={{ fontSize: 10 }}>{"Min. 8 car., 1 majuscule, 1 chiffre, 1 spécial"}</Text>
                   </div>
                 </div>
               )}
@@ -351,38 +395,83 @@ export default function RegisterPage() {
                 />
               </Form.Item>
 
-              <Form.Item
-                name="howDidYouHear"
-                label="Comment avez-vous entendu parler de nous ?"
-                rules={[{ required: true, message: 'Ce champ est requis' }]}
-              >
-                <Select
-                  placeholder="S&eacute;lectionnez une option"
-                  options={HOW_DID_YOU_HEAR}
-                  size="large"
-                  style={{ borderRadius: 8 }}
-                />
-              </Form.Item>
+              {!isDistributor && (
+                <Form.Item
+                  name="howDidYouHear"
+                  label="Comment avez-vous entendu parler de nous ?"
+                  rules={[{ required: true, message: 'Ce champ est requis' }]}
+                >
+                  <Select
+                    placeholder="Sélectionnez une option"
+                    options={HOW_DID_YOU_HEAR}
+                    size="large"
+                  />
+                </Form.Item>
+              )}
+
+              {isDistributor && (
+                <Form.Item
+                  name="numClients"
+                  label="Nombre de clients investisseurs"
+                >
+                  <Select
+                    placeholder="Sélectionnez une tranche"
+                    options={[
+                      { value: '1-10', label: '1 à 10' },
+                      { value: '11-50', label: '11 à 50' },
+                      { value: '51-200', label: '51 à 200' },
+                      { value: '200+', label: 'Plus de 200' },
+                    ]}
+                    size="large"
+                  />
+                </Form.Item>
+              )}
 
               <Divider style={{ margin: '16px 0' }} />
 
-              <Form.Item
-                name="isProfessional"
-                valuePropName="checked"
-                rules={[
-                  {
-                    validator: (_, value) =>
-                      value ? Promise.resolve() : Promise.reject('Vous devez confirmer être un investisseur professionnel'),
-                  },
-                ]}
-                style={{ marginBottom: 8 }}
-              >
-                <Checkbox>
-                  <span style={{ fontSize: 13 }}>
-                    Je d&eacute;clare &ecirc;tre un <strong>investisseur professionnel</strong> au sens de la r&eacute;glementation en vigueur *
-                  </span>
-                </Checkbox>
-              </Form.Item>
+              {!isDistributor && (
+                <Form.Item
+                  name="isProfessional"
+                  valuePropName="checked"
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value ? Promise.resolve() : Promise.reject("Vous devez confirmer être un investisseur professionnel"),
+                    },
+                  ]}
+                  style={{ marginBottom: 8 }}
+                >
+                  <Checkbox>
+                    <span style={{ fontSize: 13 }}>
+                      {"Je déclare être un "}
+                      <strong>investisseur professionnel</strong>
+                      {" au sens de la réglementation en vigueur *"}
+                    </span>
+                  </Checkbox>
+                </Form.Item>
+              )}
+
+              {isDistributor && (
+                <Form.Item
+                  name="isRegulated"
+                  valuePropName="checked"
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value ? Promise.resolve() : Promise.reject("Vous devez confirmer être un professionnel réglementé"),
+                    },
+                  ]}
+                  style={{ marginBottom: 8 }}
+                >
+                  <Checkbox>
+                    <span style={{ fontSize: 13 }}>
+                      {"Je déclare être un "}
+                      <strong>{"professionnel réglementé"}</strong>
+                      {" (CIF, courtier, banque) au sens de la réglementation en vigueur *"}
+                    </span>
+                  </Checkbox>
+                </Form.Item>
+              )}
 
               <Form.Item
                 name="acceptCgu"
@@ -397,8 +486,9 @@ export default function RegisterPage() {
               >
                 <Checkbox>
                   <span style={{ fontSize: 13 }}>
-                    J&apos;accepte les{' '}
-                    <a href="#" style={{ color: 'var(--ih-primary)' }}>Conditions G&eacute;n&eacute;rales d&apos;Utilisation</a> *
+                    {"J'accepte les "}
+                    <a href="#" style={{ color: 'var(--ih-primary)' }}>{"Conditions Générales d'Utilisation"}</a>
+                    {" *"}
                   </span>
                 </Checkbox>
               </Form.Item>
@@ -410,7 +500,7 @@ export default function RegisterPage() {
               >
                 <Checkbox>
                   <span style={{ fontSize: 13, color: 'var(--ih-text-secondary)' }}>
-                    J&apos;accepte de recevoir des informations commerciales
+                    {"J'accepte de recevoir des informations commerciales"}
                   </span>
                 </Checkbox>
               </Form.Item>
@@ -449,16 +539,24 @@ export default function RegisterPage() {
             onClick={() => router.push('/login')}
             style={{ color: 'var(--ih-primary)', fontWeight: 500, fontSize: 14 }}
           >
-            J&apos;ai d&eacute;j&agrave; un compte — Se connecter
+            {"J'ai déjà un compte — Se connecter"}
           </Button>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 16 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            InvestHub.cloud &copy; {new Date().getFullYear()}
+            {'InvestHub.cloud © ' + new Date().getFullYear()}
           </Text>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterContent />
+    </Suspense>
   );
 }
