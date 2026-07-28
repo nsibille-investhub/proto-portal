@@ -196,7 +196,7 @@ function ContactsContent() {
       },
     },
     {
-      title: 'Restrictions Fonds',
+      title: 'Accès Fonds',
       key: 'fundRestrictions',
       width: 180,
       render: (_, r) => {
@@ -205,7 +205,7 @@ function ContactsContent() {
       },
     },
     {
-      title: 'Restrictions Souscriptions',
+      title: 'Accès Souscriptions',
       key: 'subscriptionRestrictions',
       width: 190,
       render: (_, r) => {
@@ -214,7 +214,7 @@ function ContactsContent() {
       },
     },
     {
-      title: 'Restrictions Structures',
+      title: 'Accès Structures',
       key: 'structures',
       width: 180,
       render: (_, r) => {
