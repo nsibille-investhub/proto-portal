@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Input, Segmented, Badge } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { investmentStructures } from '@/data/mock';
+import { useAuth } from '@/lib/auth-context';
 
 const PERSONAS = [
   { label: 'LP', value: 'lp' },
@@ -56,6 +57,7 @@ export function Sidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const persona = searchParams.get('persona') ?? 'lp';
+  const { logout } = useAuth();
 
   function handlePersonaChange(value: string | number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -161,6 +163,7 @@ export function Sidebar() {
           </div>
         </Link>
         <div
+          onClick={logout}
           style={{
             display: 'flex',
             alignItems: 'center',

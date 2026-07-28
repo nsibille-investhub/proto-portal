@@ -4,6 +4,7 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { ConfigProvider } from 'antd';
 import { investHubTheme } from '@/lib/theme';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { AuthProvider } from '@/lib/auth-context';
 
 export const metadata: Metadata = {
   title: 'InvestHub Portal',
@@ -16,7 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AntdRegistry>
           <ConfigProvider theme={investHubTheme}>
-            <AppLayout>{children}</AppLayout>
+            <AuthProvider>
+              <AppLayout>{children}</AppLayout>
+            </AuthProvider>
           </ConfigProvider>
         </AntdRegistry>
       </body>

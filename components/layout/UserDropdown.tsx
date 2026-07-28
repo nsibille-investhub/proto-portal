@@ -4,12 +4,14 @@ import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { Avatar, Dropdown } from 'antd';
 import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { userProfiles } from '@/data/mock';
+import { useAuth } from '@/lib/auth-context';
 import type { MenuProps } from 'antd';
 
 export function UserDropdown() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { logout } = useAuth();
   const persona = searchParams.get('persona') ?? 'lp';
   const profile = persona === 'distributor' ? userProfiles.distributor : userProfiles.lp;
 
@@ -45,6 +47,7 @@ export function UserDropdown() {
       icon: <LogoutOutlined />,
       label: 'Se déconnecter',
       danger: true,
+      onClick: logout,
     },
   ];
 

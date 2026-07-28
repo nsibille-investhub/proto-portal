@@ -1,12 +1,21 @@
 'use client';
 import { Suspense } from 'react';
+import { usePathname } from 'next/navigation';
 import { Layout } from 'antd';
 import { Sidebar } from './Sidebar';
 import { UserDropdown } from './UserDropdown';
 
 const { Sider, Content } = Layout;
 
+const AUTH_PATHS = ['/login', '/register'];
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  if (AUTH_PATHS.some(p => pathname.startsWith(p))) {
+    return <>{children}</>;
+  }
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider
