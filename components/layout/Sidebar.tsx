@@ -22,6 +22,8 @@ const navItems: NavItem[] = [
   { key: 'subscriptions', label: 'My subscriptions', path: '/subscriptions' },
   { key: 'partners', label: 'Mes partenaires', path: '/partners', distributorOnly: true },
   { key: 'performances', label: 'My Performances', path: '/performances' },
+  { key: 'contacts', label: 'My contacts', path: '/contacts' },
+  { key: 'structures', label: 'My Structures', path: '/structures' },
   { key: 'funds', label: 'Our funds', path: '/funds' },
   { key: 'secondary-market', label: 'Marché secondaire', path: '/secondary-market' },
   { key: 'design-system', label: '⚙ Design System', path: '/design-system' },
@@ -112,19 +114,27 @@ export function Sidebar() {
 
       {/* Bottom user actions */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '8px 0' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '9px 20px',
-            color: 'rgba(255,255,255,0.6)',
-            cursor: 'pointer',
-            fontSize: 13.5,
-          }}
+        <Link
+          href={persona !== 'lp' ? `/profile?persona=${persona}` : '/profile'}
+          style={{ textDecoration: 'none' }}
         >
-          <span>Profil</span>
-        </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '9px 20px',
+              color: pathname === '/profile' ? 'white' : 'rgba(255,255,255,0.6)',
+              background: pathname === '/profile' ? 'rgba(255,255,255,0.08)' : 'transparent',
+              fontWeight: pathname === '/profile' ? 600 : 400,
+              cursor: 'pointer',
+              fontSize: 13.5,
+              transition: 'all 0.15s',
+            }}
+          >
+            <span>Profil</span>
+          </div>
+        </Link>
         <div
           style={{
             display: 'flex',

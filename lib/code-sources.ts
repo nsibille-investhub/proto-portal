@@ -1186,3 +1186,155 @@ export default function ValidationPage() {
   );
 }
 `;
+
+export const PROFILE_PAGE_CODE = `'use client';
+import { useSearchParams } from 'next/navigation';
+import { Card, Form, Input, Select, Button, Typography, Divider } from 'antd';
+import {
+  MailOutlined, LockOutlined, PhoneOutlined, GlobalOutlined,
+  UserOutlined, BankOutlined, SafetyCertificateOutlined, EyeInvisibleOutlined,
+} from '@ant-design/icons';
+import { userProfiles } from '@/data/mock';
+
+const { Title, Text } = Typography;
+
+const COUNTRIES = [
+  'France', 'Belgique', 'Suisse', 'Luxembourg', 'Monaco',
+  'Allemagne', 'Royaume-Uni', 'Espagne', 'Italie', 'Pays-Bas',
+];
+
+export default function ProfilePage() {
+  const searchParams = useSearchParams();
+  const persona = searchParams.get('persona') ?? 'lp';
+  const profile = persona === 'distributor' ? userProfiles.distributor : userProfiles.lp;
+
+  return (
+    <div style={{ maxWidth: 720, margin: '0 auto' }}>
+      {/* Identifiants de connexion */}
+      <Card style={{ borderRadius: 12, border: '1px solid var(--ih-border)', marginBottom: 24 }}>
+        <Title level={5}>Identifiants de connexion</Title>
+        <Form layout="vertical" requiredMark={false}>
+          <Form.Item label="Email">
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Input prefix={<MailOutlined />} value={profile.email} disabled style={{ flex: 1 }} />
+              <Button type="primary">Modifier</Button>
+            </div>
+          </Form.Item>
+          <Form.Item label="Mot de passe">
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Input.Password
+                prefix={<LockOutlined />}
+                value={"••••••••"}
+                disabled
+                iconRender={() => <EyeInvisibleOutlined />}
+                style={{ flex: 1 }}
+              />
+              <Button type="primary">Modifier</Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Card>
+
+      {/* Détails du contact */}
+      <Card style={{ borderRadius: 12, border: '1px solid var(--ih-border)', marginBottom: 24 }}>
+        <Title level={5}>Détails du contact</Title>
+        <Form layout="vertical" requiredMark={false}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+            <Form.Item label="Prénom">
+              <Input prefix={<UserOutlined />} defaultValue={profile.firstName} />
+            </Form.Item>
+            <Form.Item label="Nom">
+              <Input prefix={<UserOutlined />} defaultValue={profile.lastName} />
+            </Form.Item>
+          </div>
+          <Form.Item label="Numéro de téléphone">
+            <Input prefix={<PhoneOutlined />} defaultValue={profile.phone} />
+          </Form.Item>
+          <Form.Item label="Pays">
+            <Select
+              defaultValue={profile.country}
+              suffixIcon={<GlobalOutlined />}
+              options={COUNTRIES.map(c => ({ value: c, label: c }))}
+            />
+          </Form.Item>
+          {persona === 'distributor' && 'company' in profile && (
+            <>
+              <Divider />
+              <Form.Item label="Société">
+                <Input prefix={<BankOutlined />} defaultValue={profile.company} />
+              </Form.Item>
+              <Form.Item label="N° ORIAS">
+                <Input prefix={<SafetyCertificateOutlined />} defaultValue={profile.orias} />
+              </Form.Item>
+            </>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+            <Button type="primary" size="large">Sauvegarder</Button>
+          </div>
+        </Form>
+      </Card>
+    </div>
+  );
+}
+`;
+
+export const CONTACTS_PAGE_CODE = `'use client';
+// Page "Mes contacts supplémentaires" — vue LP uniquement
+// Tableau avec colonnes : Nom, Email, Communications, Restrictions Fonds/Souscriptions/Structures, Actions
+// Actions : Modifier, Supprimer, Réinitialiser le mot de passe
+// Modale ajout/édition avec accès portail conditionnel :
+//   - Si "Accès espace investisseur" activé :
+//     - Structures (multi-select ou "Toutes les structures")
+//     - Fonds (multi-select ou "Tous les fonds")
+//     - Souscriptions (multi-select ou "Toutes les souscriptions")
+//     - Notifications (multi-select ou "Toutes les notifications")
+
+import { Table, Button, Dropdown, Modal, Form, Input, Select, Checkbox, Switch, Tag } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined, EllipsisOutlined } from '@ant-design/icons';
+import { lpContacts, funds, subscriptions, notificationTypes, structures } from '@/data/mock';
+
+// Voir le code source complet dans app/contacts/page.tsx
+`;
+
+export const STRUCTURES_PAGE_CODE = `// app/structures/page.tsx
+// Page "Mes Structures" — liste des structures d'investissement sous forme de cards
+//
+// Chaque card affiche :
+//   - Icône type (personne morale / physique)
+//   - Nom + forme juridique (Tag)
+//   - Statut (Active / En cours / Inactive)
+//   - SIREN + ville
+//   - Mini KPIs : nombre de contacts, souscriptions, engagement total
+//
+// Clic sur une card → /structures/[id] (page détail)
+
+import { Card, Tag, Typography, Button, Badge } from 'antd';
+import { BankOutlined, UserOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
+import { investmentStructures, subscriptions } from '@/data/mock';
+
+// Voir le code source complet dans app/structures/page.tsx
+`;
+
+export const STRUCTURE_DETAIL_CODE = `// app/structures/[id]/page.tsx
+// Page détail d'une structure d'investissement
+//
+// Header : icône, nom, forme juridique, statut, SIREN
+// KPIs : engagement total, total appelé, total distribué, nombre de souscriptions
+//
+// Tabs :
+//   1. Identification — formulaire réglementaire avec sync INSEE
+//      (dénomination, forme juridique, SIREN, SIRET, RCS, capital, NAF, adresse)
+//   2. Contacts — table des contacts rattachés avec rôles (admin, viewer, signatory, accountant)
+//      + modals pour rattacher un contact existant ou en créer un nouveau
+//   3. UBO — bénéficiaires effectifs avec % détention, type (directe/indirecte)
+//      + total détention déclarée
+//   4. Personnes clés — dirigeants et fonctions (Gérant, Président, DG, DAF...)
+//   5. Souscriptions — table des souscriptions rattachées (fonds, date, engagement, appelé, statut)
+//
+// Chaque onglet permet l'ajout via modals avec recherche dans les contacts existants
+
+import { Card, Tabs, Form, Input, Select, Button, Tag, Table, Statistic, Modal } from 'antd';
+import { investmentStructures, lpContacts, subscriptions, userProfiles } from '@/data/mock';
+
+// Voir le code source complet dans app/structures/[id]/page.tsx
+`;

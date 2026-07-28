@@ -2,6 +2,7 @@
 import { Suspense } from 'react';
 import { Layout } from 'antd';
 import { Sidebar } from './Sidebar';
+import { UserDropdown } from './UserDropdown';
 
 const { Sider, Content } = Layout;
 
@@ -25,10 +26,29 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </Suspense>
       </Sider>
       <Layout style={{ marginLeft: 220 }}>
+        {/* Top bar */}
+        <div
+          style={{
+            height: 56,
+            background: 'var(--ih-bg-card)',
+            borderBottom: '1px solid var(--ih-border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            padding: '0 32px',
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+          }}
+        >
+          <Suspense fallback={null}>
+            <UserDropdown />
+          </Suspense>
+        </div>
         <Content
           style={{
             padding: '32px 64px',
-            minHeight: '100vh',
+            minHeight: 'calc(100vh - 56px)',
             background: 'var(--ih-bg)',
           }}
         >
@@ -36,7 +56,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </div>
         </Content>
-
       </Layout>
     </Layout>
   );
