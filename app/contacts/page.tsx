@@ -9,15 +9,15 @@ import {
 } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined,
-  EllipsisOutlined, CodeOutlined, ExclamationCircleFilled,
+  EllipsisOutlined, CodeOutlined, ExclamationCircleFilled, MinusCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { PageHeader } from '@/components/shared/PageHeader';
 import {
-  lpContacts, funds, subscriptions, notificationTypes, structures,
-  type LpContact,
+  lpContacts, funds, subscriptions, notificationTypes, structures, contactRoles,
+  type LpContact, type ContactStructureRole,
 } from '@/data/mock';
 import { CONTACTS_PAGE_CODE } from '@/lib/code-sources';
 
@@ -60,10 +60,11 @@ function ContactsContent() {
   const [codeOpen, setCodeOpen] = useState(false);
   const [form] = Form.useForm();
   const [hasPortalAccess, setHasPortalAccess] = useState(false);
-  const [allStructures, setAllStructures] = useState(false);
+  const [structureRoleRows, setStructureRoleRows] = useState<ContactStructureRole[]>([]);
   const [allFunds, setAllFunds] = useState(false);
   const [allSubscriptions, setAllSubscriptions] = useState(false);
   const [allNotifications, setAllNotifications] = useState(false);
+  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
 
   const subscriptionLookup: Record<number, string> = {};
   subscriptions.forEach(s => {
@@ -80,10 +81,11 @@ function ContactsContent() {
   function openAdd() {
     setEditingContact(null);
     setHasPortalAccess(false);
-    setAllStructures(false);
+    setStructureRoleRows([]);
     setAllFunds(false);
     setAllSubscriptions(false);
     setAllNotifications(false);
+    setSelectedNotifications([]);
     form.resetFields();
     setModalOpen(true);
   }
@@ -91,10 +93,11 @@ function ContactsContent() {
   function openEdit(contact: LpContact) {
     setEditingContact(contact);
     setHasPortalAccess(contact.hasPortalAccess);
-    setAllStructures(contact.structures === 'all');
+    setStructureRoleRows(contact.structureRoles);
     setAllFunds(contact.fundRestrictions === 'all');
     setAllSubscriptions(contact.subscriptionRestrictions === 'all');
     setAllNotifications(contact.notifications === 'all');
+    setSelectedNotifications(contact.notifications === 'all' ? [] : contact.notifications);
     form.setFieldsValue({
       lastName: contact.lastName,
       firstName: contact.firstName,
@@ -102,7 +105,6 @@ function ContactsContent() {
       phone: contact.phone,
       language: contact.language,
       hasPortalAccess: contact.hasPortalAccess,
-      structures: contact.structures === 'all' ? [] : contact.structures,
       fundRestrictions: contact.fundRestrictions === 'all' ? [] : contact.fundRestrictions,
       subscriptionRestrictions: contact.subscriptionRestrictions === 'all' ? [] : contact.subscriptionRestrictions,
       notifications: contact.notifications === 'all' ? [] : contact.notifications,
@@ -138,6 +140,9 @@ function ContactsContent() {
     });
   }
 
+  const hasNotifications = allNotifications || selectedNotifications.length > 0;
+  const showAccessRules = hasPortalAccess || hasNotifications;
+
   function handleSubmit() {
     form.validateFields().then(values => {
       const contactData: LpContact = {
@@ -148,10 +153,10 @@ function ContactsContent() {
         phone: values.phone ?? '',
         language: values.language ?? 'fr',
         hasPortalAccess: hasPortalAccess,
-        structures: hasPortalAccess ? (allStructures ? 'all' : (values.structures ?? [])) : [],
-        fundRestrictions: hasPortalAccess ? (allFunds ? 'all' : (values.fundRestrictions ?? [])) : [],
-        subscriptionRestrictions: hasPortalAccess ? (allSubscriptions ? 'all' : (values.subscriptionRestrictions ?? [])) : [],
-        notifications: hasPortalAccess ? (allNotifications ? 'all' : (values.notifications ?? [])) : [],
+        structureRoles: showAccessRules ? structureRoleRows.filter(r => r.structureId) : [],
+        fundRestrictions: showAccessRules ? (allFunds ? 'all' : (values.fundRestrictions ?? [])) : [],
+        subscriptionRestrictions: showAccessRules ? (allSubscriptions ? 'all' : (values.subscriptionRestrictions ?? [])) : [],
+        notifications: showAccessRules ? (allNotifications ? 'all' : (values.notifications ?? [])) : [],
       };
 
       if (editingContact) {
@@ -214,22 +219,31 @@ function ContactsContent() {
       },
     },
     {
-      title: 'Accès Structures',
-      key: 'structures',
-      width: 180,
+      title: 'Structures / Rôles',
+      key: 'structureRoles',
+      width: 220,
       render: (_, r) => {
-        if (!r.hasPortalAccess) return <Text type="secondary" style={{ fontSize: 12 }}>—</Text>;
+        if (r.structureRoles.length === 0) return <Text type="secondary" style={{ fontSize: 12 }}>—</Text>;
         const structureLookup: Record<string, string> = {};
         structures.forEach(s => { structureLookup[s.value] = s.label; });
-        if (r.structures === 'all') return <Tag color="green">Toutes</Tag>;
-        if (r.structures.length === 0) return <Text type="secondary" style={{ fontSize: 12 }}>—</Text>;
-        const labels = r.structures.map(v => structureLookup[v] ?? v);
-        if (labels.length <= 1) return <Tag style={{ fontSize: 11 }}>{labels[0]}</Tag>;
+        const roleLookup: Record<string, string> = {};
+        contactRoles.forEach(cr => { roleLookup[cr.value] = cr.label; });
         return (
-          <Space size={4} wrap>
-            <Tag style={{ fontSize: 11 }}>{labels[0]}</Tag>
-            <Tag style={{ fontSize: 11 }}>+{labels.length - 1}</Tag>
-          </Space>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {r.structureRoles.slice(0, 2).map(sr => (
+              <div key={sr.structureId} style={{ fontSize: 12, lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 500 }}>{structureLookup[sr.structureId] ?? sr.structureId}</span>
+                {sr.roles.length > 0 && (
+                  <span style={{ color: 'var(--ih-text-secondary)', marginLeft: 4 }}>
+                    ({sr.roles.map(rv => roleLookup[rv] ?? rv).join(', ')})
+                  </span>
+                )}
+              </div>
+            ))}
+            {r.structureRoles.length > 2 && (
+              <Text type="secondary" style={{ fontSize: 11 }}>+{r.structureRoles.length - 2} autre(s)</Text>
+            )}
+          </div>
         );
       },
     },
@@ -382,7 +396,7 @@ function ContactsContent() {
             <Select options={LANGUAGES} placeholder="Sélectionnez la langue" />
           </Form.Item>
 
-          <Form.Item>
+          <Form.Item style={{ marginBottom: 8 }}>
             <Checkbox
               checked={hasPortalAccess}
               onChange={e => setHasPortalAccess(e.target.checked)}
@@ -391,30 +405,129 @@ function ContactsContent() {
             </Checkbox>
           </Form.Item>
 
-          {hasPortalAccess && (
+          {/* Notifications — always visible */}
+          <Form.Item label="Notifications" style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: allNotifications ? 0 : 8 }}>
+              <Switch
+                size="small"
+                checked={allNotifications}
+                onChange={setAllNotifications}
+              />
+              <Text style={{ fontSize: 13 }}>Toutes les notifications</Text>
+            </div>
+            {!allNotifications && (
+              <Form.Item name="notifications" noStyle>
+                <Select
+                  mode="multiple"
+                  placeholder="Sélectionnez les groupes"
+                  options={notificationTypes}
+                  style={{ width: '100%' }}
+                  onChange={(vals: string[]) => setSelectedNotifications(vals)}
+                />
+              </Form.Item>
+            )}
+          </Form.Item>
+
+          {showAccessRules && (
             <>
               <Divider style={{ margin: '4px 0 16px' }} />
+              <Title level={5} style={{ margin: '0 0 16px', fontSize: 14 }}>Règles d&apos;accès</Title>
 
-              {/* Structures */}
+              {/* Structure / Rôle table */}
               <Form.Item label="Rattacher aux structures">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: allStructures ? 0 : 8 }}>
-                  <Switch
-                    size="small"
-                    checked={allStructures}
-                    onChange={setAllStructures}
-                  />
-                  <Text style={{ fontSize: 13 }}>Toutes les structures</Text>
-                </div>
-                {!allStructures && (
-                  <Form.Item name="structures" noStyle>
-                    <Select
-                      mode="multiple"
-                      placeholder="Sélectionnez les structures"
-                      options={structureOptions}
+                <div style={{
+                  border: '1px solid var(--ih-border)',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                }}>
+                  {structureRoleRows.length > 0 && (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr 32px',
+                      gap: 0,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: 'var(--ih-text-secondary)',
+                      padding: '8px 12px',
+                      background: '#fafafa',
+                      borderBottom: '1px solid var(--ih-border)',
+                    }}>
+                      <span>Structure</span>
+                      <span>Rôle(s)</span>
+                      <span />
+                    </div>
+                  )}
+                  {structureRoleRows.map((row, idx) => {
+                    const usedStructures = structureRoleRows
+                      .filter((_, i) => i !== idx)
+                      .map(r => r.structureId);
+                    const availableStructures = structureOptions.filter(
+                      o => !usedStructures.includes(o.value)
+                    );
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 32px',
+                          gap: 8,
+                          padding: '8px 12px',
+                          alignItems: 'center',
+                          borderBottom: idx < structureRoleRows.length - 1 ? '1px solid var(--ih-border)' : undefined,
+                        }}
+                      >
+                        <Select
+                          size="small"
+                          placeholder="Structure"
+                          value={row.structureId || undefined}
+                          options={availableStructures}
+                          onChange={(val) => {
+                            const updated = [...structureRoleRows];
+                            updated[idx] = { ...updated[idx], structureId: val };
+                            setStructureRoleRows(updated);
+                          }}
+                          style={{ width: '100%' }}
+                        />
+                        <Select
+                          size="small"
+                          mode="multiple"
+                          placeholder="Rôle(s)"
+                          value={row.roles}
+                          options={contactRoles}
+                          onChange={(vals) => {
+                            const updated = [...structureRoleRows];
+                            updated[idx] = { ...updated[idx], roles: vals };
+                            setStructureRoleRows(updated);
+                          }}
+                          style={{ width: '100%' }}
+                        />
+                        <Button
+                          type="text"
+                          size="small"
+                          danger
+                          icon={<MinusCircleOutlined />}
+                          onClick={() => {
+                            setStructureRoleRows(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                  <div style={{ padding: '8px 12px' }}>
+                    <Button
+                      type="dashed"
+                      size="small"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setStructureRoleRows(prev => [...prev, { structureId: '', roles: [] }]);
+                      }}
+                      disabled={structureRoleRows.length >= structures.length}
                       style={{ width: '100%' }}
-                    />
-                  </Form.Item>
-                )}
+                    >
+                      Ajouter une structure
+                    </Button>
+                  </div>
+                </div>
               </Form.Item>
 
               {/* Fonds */}
@@ -455,28 +568,6 @@ function ContactsContent() {
                       mode="multiple"
                       placeholder="Sélectionnez les souscriptions"
                       options={subscriptionOptions}
-                      style={{ width: '100%' }}
-                    />
-                  </Form.Item>
-                )}
-              </Form.Item>
-
-              {/* Notifications */}
-              <Form.Item label="Notifications">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: allNotifications ? 0 : 8 }}>
-                  <Switch
-                    size="small"
-                    checked={allNotifications}
-                    onChange={setAllNotifications}
-                  />
-                  <Text style={{ fontSize: 13 }}>Toutes les notifications</Text>
-                </div>
-                {!allNotifications && (
-                  <Form.Item name="notifications" noStyle>
-                    <Select
-                      mode="multiple"
-                      placeholder="Sélectionnez les groupes"
-                      options={notificationTypes}
                       style={{ width: '100%' }}
                     />
                   </Form.Item>

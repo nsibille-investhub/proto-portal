@@ -267,6 +267,19 @@ export const structures = [
   { value: 'pp_chomette', label: 'Cyril Chomette (personne physique)' },
 ];
 
+export const contactRoles = [
+  { value: 'dirigeant', label: 'Dirigeant' },
+  { value: 'ubo', label: 'UBO (Bénéficiaire effectif)' },
+  { value: 'signataire', label: 'Signataire autorisé' },
+  { value: 'representant_legal', label: 'Représentant légal' },
+  { value: 'contact', label: 'Contact' },
+];
+
+export interface ContactStructureRole {
+  structureId: string;
+  roles: string[];
+}
+
 export interface LpContact {
   id: number;
   lastName: string;
@@ -275,7 +288,7 @@ export interface LpContact {
   phone: string;
   language: 'fr' | 'en';
   hasPortalAccess: boolean;
-  structures: string[] | 'all';
+  structureRoles: ContactStructureRole[];
   fundRestrictions: string[] | 'all';
   subscriptionRestrictions: number[] | 'all';
   notifications: string[] | 'all';
@@ -290,7 +303,10 @@ export const lpContacts: LpContact[] = [
     phone: '+33 6 12 34 56 78',
     language: 'fr',
     hasPortalAccess: true,
-    structures: ['sci_chomette', 'holding_cc'],
+    structureRoles: [
+      { structureId: 'sci_chomette', roles: ['dirigeant', 'ubo'] },
+      { structureId: 'holding_cc', roles: ['contact'] },
+    ],
     fundRestrictions: ['Impact Growth II', 'Flex II'],
     subscriptionRestrictions: [1, 3],
     notifications: ['capital_calls', 'reporting', 'distributions'],
@@ -303,7 +319,11 @@ export const lpContacts: LpContact[] = [
     phone: '+33 1 45 67 89 01',
     language: 'fr',
     hasPortalAccess: true,
-    structures: 'all',
+    structureRoles: [
+      { structureId: 'sci_chomette', roles: ['representant_legal'] },
+      { structureId: 'holding_cc', roles: ['dirigeant', 'signataire'] },
+      { structureId: 'pp_chomette', roles: ['contact'] },
+    ],
     fundRestrictions: 'all',
     subscriptionRestrictions: 'all',
     notifications: 'all',
@@ -316,7 +336,7 @@ export const lpContacts: LpContact[] = [
     phone: '+33 4 78 90 12 34',
     language: 'fr',
     hasPortalAccess: false,
-    structures: [],
+    structureRoles: [],
     fundRestrictions: [],
     subscriptionRestrictions: [],
     notifications: [],
@@ -329,7 +349,9 @@ export const lpContacts: LpContact[] = [
     phone: '+33 6 98 76 54 32',
     language: 'en',
     hasPortalAccess: true,
-    structures: ['pp_chomette'],
+    structureRoles: [
+      { structureId: 'pp_chomette', roles: ['ubo', 'signataire'] },
+    ],
     fundRestrictions: ['Venture I', 'Fonds Secondaire'],
     subscriptionRestrictions: [4, 5],
     notifications: ['compliance', 'documents', 'nav_updates'],
