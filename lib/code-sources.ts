@@ -1295,3 +1295,46 @@ import { lpContacts, funds, subscriptions, notificationTypes, structures } from 
 
 // Voir le code source complet dans app/contacts/page.tsx
 `;
+
+export const STRUCTURES_PAGE_CODE = `// app/structures/page.tsx
+// Page "Mes Structures" — liste des structures d'investissement sous forme de cards
+//
+// Chaque card affiche :
+//   - Icône type (personne morale / physique)
+//   - Nom + forme juridique (Tag)
+//   - Statut (Active / En cours / Inactive)
+//   - SIREN + ville
+//   - Mini KPIs : nombre de contacts, souscriptions, engagement total
+//
+// Clic sur une card → /structures/[id] (page détail)
+
+import { Card, Tag, Typography, Button, Badge } from 'antd';
+import { BankOutlined, UserOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
+import { investmentStructures, subscriptions } from '@/data/mock';
+
+// Voir le code source complet dans app/structures/page.tsx
+`;
+
+export const STRUCTURE_DETAIL_CODE = `// app/structures/[id]/page.tsx
+// Page détail d'une structure d'investissement
+//
+// Header : icône, nom, forme juridique, statut, SIREN
+// KPIs : engagement total, total appelé, total distribué, nombre de souscriptions
+//
+// Tabs :
+//   1. Identification — formulaire réglementaire avec sync INSEE
+//      (dénomination, forme juridique, SIREN, SIRET, RCS, capital, NAF, adresse)
+//   2. Contacts — table des contacts rattachés avec rôles (admin, viewer, signatory, accountant)
+//      + modals pour rattacher un contact existant ou en créer un nouveau
+//   3. UBO — bénéficiaires effectifs avec % détention, type (directe/indirecte)
+//      + total détention déclarée
+//   4. Personnes clés — dirigeants et fonctions (Gérant, Président, DG, DAF...)
+//   5. Souscriptions — table des souscriptions rattachées (fonds, date, engagement, appelé, statut)
+//
+// Chaque onglet permet l'ajout via modals avec recherche dans les contacts existants
+
+import { Card, Tabs, Form, Input, Select, Button, Tag, Table, Statistic, Modal } from 'antd';
+import { investmentStructures, lpContacts, subscriptions, userProfiles } from '@/data/mock';
+
+// Voir le code source complet dans app/structures/[id]/page.tsx
+`;

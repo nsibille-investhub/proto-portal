@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
   { key: 'partners', label: 'Mes partenaires', path: '/partners', distributorOnly: true },
   { key: 'performances', label: 'My Performances', path: '/performances' },
   { key: 'contacts', label: 'My contacts', path: '/contacts' },
+  { key: 'structures', label: 'My Structures', path: '/structures' },
   { key: 'funds', label: 'Our funds', path: '/funds' },
   { key: 'secondary-market', label: 'Marché secondaire', path: '/secondary-market' },
   { key: 'design-system', label: '⚙ Design System', path: '/design-system' },

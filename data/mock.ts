@@ -336,6 +336,135 @@ export const lpContacts: LpContact[] = [
   },
 ];
 
+export interface StructureContact {
+  contactId: number;
+  role: 'admin' | 'viewer' | 'signatory' | 'accountant';
+}
+
+export interface StructureUbo {
+  contactId: number;
+  ownershipPct: number;
+  directHolding: boolean;
+  declarationDate: string;
+}
+
+export interface StructureKeyPerson {
+  contactId: number;
+  function: string;
+  startDate: string;
+}
+
+export interface InvestmentStructure {
+  id: string;
+  name: string;
+  type: 'moral' | 'physical';
+  legalForm: string;
+  siren: string;
+  siret: string;
+  rcs: string;
+  capital: number;
+  address: string;
+  postalCode: string;
+  city: string;
+  country: string;
+  createdAt: string;
+  nafCode: string;
+  nafLabel: string;
+  status: 'active' | 'inactive' | 'en_cours';
+  contacts: StructureContact[];
+  ubos: StructureUbo[];
+  keyPeople: StructureKeyPerson[];
+  subscriptionIds: number[];
+}
+
+export const investmentStructures: InvestmentStructure[] = [
+  {
+    id: 'sci_chomette',
+    name: 'SCI Chomette Patrimoine',
+    type: 'moral',
+    legalForm: 'SCI',
+    siren: '892 145 367',
+    siret: '892 145 367 00012',
+    rcs: 'Paris B 892 145 367',
+    capital: 50000,
+    address: '24 rue de Rivoli',
+    postalCode: '75004',
+    city: 'Paris',
+    country: 'France',
+    createdAt: '12/03/2019',
+    nafCode: '6820A',
+    nafLabel: 'Location de logements',
+    status: 'active',
+    contacts: [
+      { contactId: 1, role: 'admin' },
+      { contactId: 2, role: 'accountant' },
+    ],
+    ubos: [
+      { contactId: 0, ownershipPct: 60, directHolding: true, declarationDate: '15/01/2024' },
+      { contactId: 1, ownershipPct: 40, directHolding: true, declarationDate: '15/01/2024' },
+    ],
+    keyPeople: [
+      { contactId: 0, function: 'Gérant', startDate: '12/03/2019' },
+    ],
+    subscriptionIds: [1, 3],
+  },
+  {
+    id: 'holding_cc',
+    name: 'Holding CC Invest',
+    type: 'moral',
+    legalForm: 'SAS',
+    siren: '918 234 561',
+    siret: '918 234 561 00018',
+    rcs: 'Lyon B 918 234 561',
+    capital: 200000,
+    address: '15 place Bellecour',
+    postalCode: '69002',
+    city: 'Lyon',
+    country: 'France',
+    createdAt: '08/06/2021',
+    nafCode: '6420Z',
+    nafLabel: 'Activités des sociétés holding',
+    status: 'active',
+    contacts: [
+      { contactId: 1, role: 'viewer' },
+      { contactId: 2, role: 'admin' },
+      { contactId: 4, role: 'signatory' },
+    ],
+    ubos: [
+      { contactId: 0, ownershipPct: 100, directHolding: true, declarationDate: '20/06/2021' },
+    ],
+    keyPeople: [
+      { contactId: 0, function: 'Président', startDate: '08/06/2021' },
+      { contactId: 2, function: 'Directeur Général', startDate: '01/09/2022' },
+    ],
+    subscriptionIds: [2, 4, 5],
+  },
+  {
+    id: 'pp_chomette',
+    name: 'Cyril Chomette',
+    type: 'physical',
+    legalForm: 'Personne physique',
+    siren: '',
+    siret: '',
+    rcs: '',
+    capital: 0,
+    address: '24 rue de Rivoli',
+    postalCode: '75004',
+    city: 'Paris',
+    country: 'France',
+    createdAt: '01/01/2020',
+    nafCode: '',
+    nafLabel: '',
+    status: 'active',
+    contacts: [
+      { contactId: 4, role: 'viewer' },
+    ],
+    ubos: [],
+    keyPeople: [],
+    subscriptionIds: [6],
+  },
+];
+
 export const navPerformance = Array.from({ length: 24 }, (_, i) => {
   const date = new Date(2024, i, 1);
   return {
