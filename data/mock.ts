@@ -354,6 +354,38 @@ export interface StructureKeyPerson {
   startDate: string;
 }
 
+export interface KycDocument {
+  id: string;
+  name: string;
+  category: 'common' | 'structure';
+  status: 'validated' | 'pending_review' | 'rejected' | 'expired' | 'missing';
+  uploadedAt: string | null;
+  expiresAt: string | null;
+  comment?: string;
+}
+
+export interface KycQuestion {
+  id: string;
+  question: string;
+  answer: string | null;
+  status: 'validated' | 'pending' | 'rejected' | 'not_started';
+}
+
+export interface KycSection {
+  id: string;
+  title: string;
+  category: 'common' | 'structure';
+  questions: KycQuestion[];
+}
+
+export interface StructureKyc {
+  status: 'complete' | 'in_progress' | 'action_required' | 'not_started';
+  lastUpdated: string;
+  completionPct: number;
+  documents: KycDocument[];
+  sections: KycSection[];
+}
+
 export interface InvestmentStructure {
   id: string;
   name: string;
@@ -375,7 +407,49 @@ export interface InvestmentStructure {
   ubos: StructureUbo[];
   keyPeople: StructureKeyPerson[];
   subscriptionIds: number[];
+  kyc: StructureKyc;
 }
+
+const COMMON_DOCS_VALIDATED: KycDocument[] = [
+  { id: 'common_id', name: "Pièce d'identité (CNI / Passeport)", category: 'common', status: 'validated', uploadedAt: '10/01/2024', expiresAt: '10/01/2034' },
+  { id: 'common_domicile', name: 'Justificatif de domicile de moins de 3 mois', category: 'common', status: 'validated', uploadedAt: '15/04/2026', expiresAt: '15/07/2026' },
+  { id: 'common_tax', name: "Avis d'imposition (dernière année)", category: 'common', status: 'validated', uploadedAt: '01/09/2025', expiresAt: null },
+  { id: 'common_rib', name: 'RIB / IBAN de distribution', category: 'common', status: 'validated', uploadedAt: '10/01/2024', expiresAt: null },
+  { id: 'common_lcbft', name: 'Questionnaire LCB-FT (lutte anti-blanchiment)', category: 'common', status: 'validated', uploadedAt: '10/01/2024', expiresAt: null },
+  { id: 'common_ppe', name: 'Attestation PPE (Personne Politiquement Exposée)', category: 'common', status: 'validated', uploadedAt: '10/01/2024', expiresAt: '10/01/2027' },
+];
+
+const COMMON_SECTIONS_VALIDATED: KycSection[] = [
+  {
+    id: 'identity', title: 'Identité du souscripteur', category: 'common',
+    questions: [
+      { id: 'q_firstname', question: 'Prénom', answer: 'Cyril', status: 'validated' },
+      { id: 'q_lastname', question: 'Nom', answer: 'Chomette', status: 'validated' },
+      { id: 'q_birthdate', question: 'Date de naissance', answer: '15/03/1978', status: 'validated' },
+      { id: 'q_nationality', question: 'Nationalité', answer: 'Française', status: 'validated' },
+      { id: 'q_birthplace', question: 'Lieu de naissance', answer: 'Paris (75)', status: 'validated' },
+    ],
+  },
+  {
+    id: 'tax_residence', title: 'Résidence fiscale', category: 'common',
+    questions: [
+      { id: 'q_tax_country', question: 'Pays de résidence fiscale', answer: 'France', status: 'validated' },
+      { id: 'q_tin', question: 'Numéro d\'identification fiscale (NIF)', answer: '1 78 03 75 108 042 35', status: 'validated' },
+      { id: 'q_ifi', question: 'Assujetti à l\'IFI ?', answer: 'Non', status: 'validated' },
+      { id: 'q_fatca', question: 'US Person (FATCA)', answer: 'Non', status: 'validated' },
+    ],
+  },
+  {
+    id: 'investor_profile', title: 'Profil investisseur', category: 'common',
+    questions: [
+      { id: 'q_category', question: 'Catégorie d\'investisseur', answer: 'Investisseur averti (article 423-49 RGAMF)', status: 'validated' },
+      { id: 'q_experience', question: 'Expérience en capital-investissement', answer: 'Plus de 5 ans', status: 'validated' },
+      { id: 'q_patrimony', question: 'Patrimoine financier estimé', answer: '> 500 000 €', status: 'validated' },
+      { id: 'q_revenue', question: 'Revenus annuels nets', answer: '> 150 000 €', status: 'validated' },
+      { id: 'q_risk', question: 'Tolérance au risque', answer: 'Élevée — accepte une perte en capital', status: 'validated' },
+    ],
+  },
+];
 
 export const investmentStructures: InvestmentStructure[] = [
   {
@@ -407,6 +481,39 @@ export const investmentStructures: InvestmentStructure[] = [
       { contactId: 0, function: 'Gérant', startDate: '12/03/2019' },
     ],
     subscriptionIds: [1, 3],
+    kyc: {
+      status: 'complete',
+      lastUpdated: '15/04/2026',
+      completionPct: 100,
+      documents: [
+        ...COMMON_DOCS_VALIDATED,
+        { id: 'str_kbis', name: 'Extrait Kbis de moins de 3 mois', category: 'structure', status: 'validated', uploadedAt: '20/04/2026', expiresAt: '20/07/2026' },
+        { id: 'str_statuts', name: 'Statuts à jour (certifiés conformes)', category: 'structure', status: 'validated', uploadedAt: '12/03/2024', expiresAt: null },
+        { id: 'str_pv', name: 'PV de nomination du gérant', category: 'structure', status: 'validated', uploadedAt: '12/03/2019', expiresAt: null },
+        { id: 'str_dbe', name: 'Déclaration des bénéficiaires effectifs (DBE)', category: 'structure', status: 'validated', uploadedAt: '15/01/2024', expiresAt: null },
+        { id: 'str_bilan', name: 'Dernier bilan / liasse fiscale', category: 'structure', status: 'validated', uploadedAt: '30/06/2025', expiresAt: null },
+      ],
+      sections: [
+        ...COMMON_SECTIONS_VALIDATED,
+        {
+          id: 'structure_info', title: 'Informations de la structure', category: 'structure',
+          questions: [
+            { id: 'q_denomination', question: 'Dénomination sociale', answer: 'SCI Chomette Patrimoine', status: 'validated' },
+            { id: 'q_legal_form', question: 'Forme juridique', answer: 'Société Civile Immobilière', status: 'validated' },
+            { id: 'q_siren', question: 'Numéro SIREN', answer: '892 145 367', status: 'validated' },
+            { id: 'q_activity', question: 'Objet social', answer: 'Acquisition et gestion de biens immobiliers', status: 'validated' },
+            { id: 'q_creation_date', question: 'Date de création', answer: '12/03/2019', status: 'validated' },
+          ],
+        },
+        {
+          id: 'origin_funds', title: 'Origine des fonds', category: 'structure',
+          questions: [
+            { id: 'q_origin', question: 'Source principale des fonds investis', answer: 'Revenus professionnels + patrimoine immobilier', status: 'validated' },
+            { id: 'q_origin_detail', question: 'Détail complémentaire', answer: 'Cession partielle d\'un bien immobilier en 2022', status: 'validated' },
+          ],
+        },
+      ],
+    },
   },
   {
     id: 'holding_cc',
@@ -438,6 +545,44 @@ export const investmentStructures: InvestmentStructure[] = [
       { contactId: 2, function: 'Directeur Général', startDate: '01/09/2022' },
     ],
     subscriptionIds: [2, 4, 5],
+    kyc: {
+      status: 'action_required',
+      lastUpdated: '02/07/2026',
+      completionPct: 68,
+      documents: [
+        ...COMMON_DOCS_VALIDATED.map(d =>
+          d.id === 'common_domicile'
+            ? { ...d, status: 'expired' as const, expiresAt: '15/04/2026', comment: 'Justificatif expiré — veuillez fournir un document de moins de 3 mois' }
+            : d
+        ),
+        { id: 'str_kbis', name: 'Extrait Kbis de moins de 3 mois', category: 'structure' as const, status: 'expired' as const, uploadedAt: '10/01/2026', expiresAt: '10/04/2026', comment: 'Kbis expiré depuis le 10/04/2026' },
+        { id: 'str_statuts', name: 'Statuts à jour (certifiés conformes)', category: 'structure' as const, status: 'validated' as const, uploadedAt: '08/06/2024', expiresAt: null },
+        { id: 'str_pv', name: 'PV de nomination du président', category: 'structure' as const, status: 'validated' as const, uploadedAt: '08/06/2021', expiresAt: null },
+        { id: 'str_dbe', name: 'Déclaration des bénéficiaires effectifs (DBE)', category: 'structure' as const, status: 'pending_review' as const, uploadedAt: '02/07/2026', expiresAt: null },
+        { id: 'str_bilan', name: 'Dernier bilan / liasse fiscale', category: 'structure' as const, status: 'missing' as const, uploadedAt: null, expiresAt: null, comment: 'Bilan 2025 non encore transmis' },
+        { id: 'str_vigilance', name: 'Attestation de vigilance URSSAF', category: 'structure' as const, status: 'missing' as const, uploadedAt: null, expiresAt: null },
+      ],
+      sections: [
+        ...COMMON_SECTIONS_VALIDATED,
+        {
+          id: 'structure_info', title: 'Informations de la structure', category: 'structure',
+          questions: [
+            { id: 'q_denomination', question: 'Dénomination sociale', answer: 'Holding CC Invest', status: 'validated' },
+            { id: 'q_legal_form', question: 'Forme juridique', answer: 'Société par Actions Simplifiée', status: 'validated' },
+            { id: 'q_siren', question: 'Numéro SIREN', answer: '918 234 561', status: 'validated' },
+            { id: 'q_activity', question: 'Objet social', answer: 'Prise de participations et gestion de portefeuille', status: 'validated' },
+            { id: 'q_creation_date', question: 'Date de création', answer: '08/06/2021', status: 'validated' },
+          ],
+        },
+        {
+          id: 'origin_funds', title: 'Origine des fonds', category: 'structure',
+          questions: [
+            { id: 'q_origin', question: 'Source principale des fonds investis', answer: 'Apports en capital + compte courant d\'associé', status: 'validated' },
+            { id: 'q_origin_detail', question: 'Détail complémentaire', answer: null, status: 'not_started' },
+          ],
+        },
+      ],
+    },
   },
   {
     id: 'pp_chomette',
@@ -462,6 +607,27 @@ export const investmentStructures: InvestmentStructure[] = [
     ubos: [],
     keyPeople: [],
     subscriptionIds: [6],
+    kyc: {
+      status: 'in_progress',
+      lastUpdated: '20/07/2026',
+      completionPct: 82,
+      documents: [
+        ...COMMON_DOCS_VALIDATED,
+        { id: 'str_origin_funds', name: "Justificatif d'origine des fonds", category: 'structure', status: 'pending_review', uploadedAt: '20/07/2026', expiresAt: null },
+        { id: 'str_patrimony', name: 'Déclaration de patrimoine', category: 'structure', status: 'missing', uploadedAt: null, expiresAt: null },
+      ],
+      sections: [
+        ...COMMON_SECTIONS_VALIDATED,
+        {
+          id: 'origin_funds', title: 'Origine des fonds', category: 'structure',
+          questions: [
+            { id: 'q_origin', question: 'Source principale des fonds investis', answer: 'Revenus professionnels (activité salariée)', status: 'validated' },
+            { id: 'q_origin_detail', question: 'Détail complémentaire', answer: null, status: 'pending' },
+            { id: 'q_heritage', question: 'Héritage ou donation ?', answer: 'Non', status: 'validated' },
+          ],
+        },
+      ],
+    },
   },
 ];
 

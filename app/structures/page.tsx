@@ -2,11 +2,12 @@
 
 import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, Tag, Typography, Button, Badge, Drawer, Empty } from 'antd';
+import { Card, Tag, Typography, Button, Badge, Drawer, Empty, Progress, Tooltip } from 'antd';
 import {
   BankOutlined, UserOutlined, FileTextOutlined,
   EnvironmentOutlined, PlusOutlined, CodeOutlined,
   CheckCircleOutlined, ClockCircleOutlined, StopOutlined,
+  SafetyCertificateOutlined, WarningOutlined, ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -23,6 +24,13 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
   inactive: { label: 'Inactive', color: 'default', icon: <StopOutlined /> },
 };
 
+const KYC_STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  complete: { label: 'KYC Complet', color: 'success', icon: <CheckCircleOutlined /> },
+  in_progress: { label: 'KYC En cours', color: 'processing', icon: <ClockCircleOutlined /> },
+  action_required: { label: 'Action requise', color: 'warning', icon: <ExclamationCircleOutlined /> },
+  not_started: { label: 'KYC Non démarré', color: 'default', icon: <StopOutlined /> },
+};
+
 export default function StructuresPage() {
   return (
     <Suspense fallback={null}>
@@ -35,18 +43,23 @@ function StructuresContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const persona = searchParams.get('persona') ?? 'lp';
-  const profile = persona === 'distributor' ? userProfiles.distributor : userProfiles.lp;
   const [codeOpen, setCodeOpen] = useState(false);
 
   function getStructureKpis(structure: typeof investmentStructures[0]) {
     const linkedSubs = subscriptions.filter(s => structure.subscriptionIds.includes(s.id));
     const totalEngagement = linkedSubs.reduce((sum, s) => sum + s.amount, 0);
-    const totalCalled = linkedSubs.reduce((sum, s) => sum + s.called, 0);
-    return { subsCount: linkedSubs.length, totalEngagement, totalCalled };
+    return { subsCount: linkedSubs.length, totalEngagement };
   }
 
   function formatCurrency(value: number): string {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
+  }
+
+  function getKycSummary(structure: typeof investmentStructures[0]) {
+    const docs = structure.kyc.documents;
+    const issues = docs.filter(d => d.status === 'expired' || d.status === 'rejected' || d.status === 'missing').length;
+    const pending = docs.filter(d => d.status === 'pending_review').length;
+    return { issues, pending };
   }
 
   return (
@@ -74,10 +87,12 @@ function StructuresContent() {
       {investmentStructures.length === 0 ? (
         <Empty description="Aucune structure d'investissement" />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 20 }}>
           {investmentStructures.map(structure => {
-            const { subsCount, totalEngagement, totalCalled } = getStructureKpis(structure);
+            const { subsCount, totalEngagement } = getStructureKpis(structure);
             const statusCfg = STATUS_CONFIG[structure.status] ?? STATUS_CONFIG.active;
+            const kycCfg = KYC_STATUS_CONFIG[structure.kyc.status] ?? KYC_STATUS_CONFIG.not_started;
+            const { issues, pending } = getKycSummary(structure);
 
             return (
               <Card
@@ -143,6 +158,75 @@ function StructuresContent() {
                       {structure.city}{structure.country !== 'France' ? `, ${structure.country}` : ''}
                     </Text>
                   </div>
+                </div>
+
+                {/* KYC Status */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 12px',
+                    background: structure.kyc.status === 'complete'
+                      ? 'rgba(82, 196, 26, 0.06)'
+                      : structure.kyc.status === 'action_required'
+                        ? 'rgba(250, 173, 20, 0.06)'
+                        : 'rgba(22, 119, 255, 0.06)',
+                    borderRadius: 8,
+                    marginBottom: 12,
+                    border: `1px solid ${
+                      structure.kyc.status === 'complete'
+                        ? 'rgba(82, 196, 26, 0.15)'
+                        : structure.kyc.status === 'action_required'
+                          ? 'rgba(250, 173, 20, 0.15)'
+                          : 'rgba(22, 119, 255, 0.15)'
+                    }`,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <SafetyCertificateOutlined style={{
+                      fontSize: 14,
+                      color: structure.kyc.status === 'complete'
+                        ? '#52c41a'
+                        : structure.kyc.status === 'action_required'
+                          ? '#faad14'
+                          : '#1677ff',
+                    }} />
+                    <div>
+                      <Tag
+                        color={kycCfg.color}
+                        icon={kycCfg.icon}
+                        style={{ margin: 0, fontSize: 11 }}
+                      >
+                        {kycCfg.label}
+                      </Tag>
+                      {issues > 0 && (
+                        <Text type="secondary" style={{ fontSize: 10, marginLeft: 6 }}>
+                          {issues} doc{issues > 1 ? 's' : ''} {issues > 1 ? 'à traiter' : 'à traiter'}
+                        </Text>
+                      )}
+                      {issues === 0 && pending > 0 && (
+                        <Text type="secondary" style={{ fontSize: 10, marginLeft: 6 }}>
+                          {pending} en attente de validation
+                        </Text>
+                      )}
+                    </div>
+                  </div>
+                  <Tooltip title={`${structure.kyc.completionPct}% complété`}>
+                    <Progress
+                      type="circle"
+                      percent={structure.kyc.completionPct}
+                      size={32}
+                      strokeColor={
+                        structure.kyc.status === 'complete'
+                          ? '#52c41a'
+                          : structure.kyc.status === 'action_required'
+                            ? '#faad14'
+                            : '#1677ff'
+                      }
+                      format={(pct) => <span style={{ fontSize: 10 }}>{pct}</span>}
+                    />
+                  </Tooltip>
                 </div>
 
                 {/* Mini KPIs */}
