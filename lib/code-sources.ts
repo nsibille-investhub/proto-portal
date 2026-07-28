@@ -1315,6 +1315,28 @@ import { investmentStructures, subscriptions } from '@/data/mock';
 // Voir le code source complet dans app/structures/page.tsx
 `;
 
+export const JUSTIFICATIFS_PAGE_CODE = `// app/justificatifs/page.tsx
+// Page "Mes justificatifs" — administration des documents KYC
+//
+// Structure :
+//   - Alert banner si des documents nécessitent une action (expirés, manquants, refusés)
+//   - Bloc "Tronc commun" : documents partagés entre toutes les structures
+//     (pièce d'identité, justificatif domicile, avis d'imposition, RIB, LCB-FT, PPE)
+//     Agrégation par "pire statut" si une structure a un doc expiré
+//   - Blocs par structure : documents spécifiques (Kbis, statuts, PV, DBE, bilan...)
+//     avec badge KYC status et compteur d'actions
+//
+// Chaque table affiche : Document, Date de soumission, Statut (tag coloré),
+// Date de validité, Actions (voir, télécharger, déposer, remplacer)
+//
+// Badge dans la sidebar avec le nombre total d'actions requises
+
+import { Table, Card, Tag, Badge, Alert, Upload, Button } from 'antd';
+import { investmentStructures, type KycDocument } from '@/data/mock';
+
+// Voir le code source complet dans app/justificatifs/page.tsx
+`;
+
 export const STRUCTURE_DETAIL_CODE = `// app/structures/[id]/page.tsx
 // Page détail d'une structure d'investissement
 //

@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Input, Segmented } from 'antd';
+import { Input, Segmented, Badge } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { investmentStructures } from '@/data/mock';
 
 const PERSONAS = [
   { label: 'LP', value: 'lp' },
@@ -14,7 +15,27 @@ interface NavItem {
   label: string;
   path: string;
   distributorOnly?: boolean;
+  badge?: number;
 }
+
+function getJustificatifsActionCount(): number {
+  let count = 0;
+  const seen = new Set<string>();
+  investmentStructures.forEach(s => {
+    s.kyc.documents.forEach(d => {
+      if (d.status === 'expired' || d.status === 'missing' || d.status === 'rejected') {
+        if (d.category === 'common') {
+          if (!seen.has(d.id)) { seen.add(d.id); count++; }
+        } else {
+          count++;
+        }
+      }
+    });
+  });
+  return count;
+}
+
+const justificatifsBadge = getJustificatifsActionCount();
 
 const navItems: NavItem[] = [
   { key: 'home', label: 'Home', path: '/home' },
@@ -24,6 +45,7 @@ const navItems: NavItem[] = [
   { key: 'performances', label: 'My Performances', path: '/performances' },
   { key: 'contacts', label: 'My contacts', path: '/contacts' },
   { key: 'structures', label: 'My Structures', path: '/structures' },
+  { key: 'justificatifs', label: 'Mes justificatifs', path: '/justificatifs', badge: justificatifsBadge },
   { key: 'funds', label: 'Our funds', path: '/funds' },
   { key: 'secondary-market', label: 'Marché secondaire', path: '/secondary-market' },
   { key: 'design-system', label: '⚙ Design System', path: '/design-system' },
@@ -105,7 +127,10 @@ export function Sidebar() {
                   borderRadius: 0,
                 }}
               >
-                <span>{item.label}</span>
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.badge && item.badge > 0 && (
+                  <Badge count={item.badge} size="small" style={{ boxShadow: 'none' }} />
+                )}
               </div>
             </Link>
           );
