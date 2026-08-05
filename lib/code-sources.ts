@@ -391,16 +391,25 @@ export function SubscriptionTable({ data }: SubscriptionTableProps) {
 `;
 
 export const DOCUMENT_EXPLORER_CODE = `'use client';
-import { useState, useMemo } from 'react';
-import { Tree, Table, Tag, Space, Typography, Tooltip } from 'antd';
-import { EyeOutlined, DownloadOutlined } from '@ant-design/icons';
-import { DocumentIcon, FolderIcon } from '@/components/shared/Icons';
-import type { ColumnsType } from 'antd/es/table';
-import type { DataNode } from 'antd/es/tree';
+// DocumentExplorer v2 — Hierarchical tree + Grid/List views + Preview panel
+// Features: fund > category tree, breadcrumb, grid/list toggle,
+// quick filters, document preview, bulk actions, search
+
+import { useState, useMemo, useCallback } from 'react';
+import { Typography, Tooltip, Badge, Button, Checkbox, Empty, Input } from 'antd';
+import {
+  EyeOutlined, DownloadOutlined, ShareAltOutlined,
+  AppstoreOutlined, UnorderedListOutlined,
+  FolderOutlined, FolderOpenOutlined,
+  FilePdfOutlined, FileExcelOutlined,
+  BarChartOutlined, SafetyCertificateOutlined, BankOutlined, AuditOutlined, DollarOutlined,
+  RightOutlined, CloseOutlined, SearchOutlined, InboxOutlined,
+} from '@ant-design/icons';
 
 interface Document {
   id: number;
   fund: string;
+  category: string;
   name: string;
   type: string;
   size: string;
@@ -408,115 +417,38 @@ interface Document {
   isNew: boolean;
 }
 
-interface DocumentExplorerProps {
-  documents: Document[];
-}
+const CATEGORIES = {
+  reporting: { label: 'Reporting', color: '#4F46E5', icon: <BarChartOutlined /> },
+  legal: { label: 'Juridique', color: '#0891B2', icon: <SafetyCertificateOutlined /> },
+  souscriptions: { label: 'Souscriptions', color: '#059669' },
+  appels_fonds: { label: 'Appels de fonds', color: '#D97706', icon: <BankOutlined /> },
+  fiscalite: { label: 'Fiscalité', color: '#DC2626', icon: <AuditOutlined /> },
+  distributions: { label: 'Distributions', color: '#7C3AED', icon: <DollarOutlined /> },
+};
 
-export function DocumentExplorer({ documents }: DocumentExplorerProps) {
-  const funds = useMemo(() => Array.from(new Set(documents.map(d => d.fund))), [documents]);
-  const [selectedFund, setSelectedFund] = useState<string>(funds[0] ?? '');
+const FILE_TYPES = {
+  PDF: { bg: '#FEE2E2', color: '#DC2626', icon: <FilePdfOutlined /> },
+  XLSX: { bg: '#DCFCE7', color: '#059669', icon: <FileExcelOutlined /> },
+};
 
-  const treeData: DataNode[] = useMemo(() => funds.map(fund => {
-    const count = documents.filter(d => d.fund === fund).length;
-    return {
-      key: fund,
-      title: \`\${fund} (\${count})\`,
-      icon: <FolderIcon size={16} />,
-      isLeaf: true,
-    };
-  }), [funds, documents]);
+// Layout: 3-panel flex (Tree 260px | Content flex:1 | Preview 360px)
+// Tree: hierarchical fund > category with expand/collapse
+// Toolbar: Breadcrumb + Search + Grid/List toggle + Quick filter chips
+// Grid: responsive card grid with color-coded file type stripe
+// List: custom rows with category tags and inline actions
+// Preview: slide-in panel with file details, actions, version history
+// Bulk bar: floating bottom bar with download/share actions
+export function DocumentExplorer({ documents }: { documents: Document[] }) {
+  const [selection, setSelection] = useState({ fund: null, category: null });
+  const [expandedFunds, setExpandedFunds] = useState(new Set([documents[0]?.fund]));
+  const [viewMode, setViewMode] = useState('grid');
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [quickFilter, setQuickFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
-  const filtered = useMemo(() =>
-    documents.filter(d => d.fund === selectedFund),
-    [documents, selectedFund]
-  );
-
-  const columns: ColumnsType<Document> = [
-    {
-      title: 'Nom',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (_, doc) => (
-        <Space>
-          <DocumentIcon size={22} />
-          <div>
-            <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
-              {doc.name}
-              {doc.isNew && (
-                <Tag
-                  style={{
-                    borderRadius: 12, fontSize: 11, padding: '0 6px',
-                    border: '1px solid #d9d9d9', color: 'var(--ih-text-primary)',
-                    background: 'white',
-                  }}
-                >
-                  New
-                </Tag>
-              )}
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--ih-text-secondary)' }}>{doc.type}</div>
-          </div>
-        </Space>
-      ),
-    },
-    {
-      title: 'Ajouté le',
-      dataIndex: 'addedAt',
-      sorter: (a, b) => a.addedAt.localeCompare(b.addedAt),
-    },
-    {
-      title: 'Taille',
-      dataIndex: 'size',
-    },
-    {
-      key: 'actions',
-      width: 80,
-      render: () => (
-        <Space size={12}>
-          <Tooltip title="Aperçu"><EyeOutlined style={{ color: 'var(--ih-text-secondary)', cursor: 'pointer', fontSize: 16 }} /></Tooltip>
-          <Tooltip title="Télécharger"><DownloadOutlined style={{ color: 'var(--ih-text-secondary)', cursor: 'pointer', fontSize: 16 }} /></Tooltip>
-        </Space>
-      ),
-    },
-  ];
-
-  return (
-    <div style={{ display: 'flex', gap: 16 }}>
-      {/* Tree panel */}
-      <div style={{
-        width: 280, flexShrink: 0,
-        background: 'var(--ih-bg-card)', borderRadius: 12,
-        border: '1px solid var(--ih-border)', padding: 16,
-      }}>
-        <Typography.Text style={{ fontSize: 13, fontWeight: 600, color: 'var(--ih-text-secondary)', display: 'block', marginBottom: 12 }}>
-          Documents ({documents.length})
-        </Typography.Text>
-        <Tree
-          showIcon
-          defaultExpandAll
-          selectedKeys={[selectedFund]}
-          treeData={treeData}
-          onSelect={(keys) => {
-            if (keys[0]) setSelectedFund(String(keys[0]));
-          }}
-          style={{ background: 'transparent' }}
-        />
-      </div>
-
-      {/* File list */}
-      <div style={{ flex: 1, background: 'var(--ih-bg-card)', borderRadius: 12, border: '1px solid var(--ih-border)', padding: 16 }}>
-        <Table
-          dataSource={filtered}
-          columns={columns}
-          rowKey="id"
-          pagination={false}
-          showHeader={!!filtered.length}
-          locale={{ emptyText: 'Aucun document' }}
-          rowSelection={{ type: 'checkbox' }}
-        />
-      </div>
-    </div>
-  );
+  // ... filtering, tree building, rendering logic
+  // See full source in components/widgets/DocumentExplorer.tsx
 }
 `;
 
