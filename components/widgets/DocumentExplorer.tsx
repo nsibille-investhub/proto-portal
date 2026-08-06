@@ -7,9 +7,9 @@ import {
   FolderOutlined, FolderOpenOutlined,
   FilePdfOutlined, FileExcelOutlined, FileWordOutlined, FileTextOutlined,
   BarChartOutlined, SafetyCertificateOutlined, BankOutlined, AuditOutlined, DollarOutlined,
-  RightOutlined, DownOutlined, CloseOutlined,
+  RightOutlined, CloseOutlined,
   ClockCircleOutlined, CheckCircleFilled,
-  SearchOutlined, InboxOutlined,
+  SearchOutlined, InboxOutlined, CalendarOutlined,
 } from '@ant-design/icons';
 
 interface Document {
@@ -30,16 +30,16 @@ interface DocumentExplorerProps {
 const CATEGORIES: Record<string, { label: string; color: string; icon: ReactNode }> = {
   reporting: { label: 'Reporting', color: '#4F46E5', icon: <BarChartOutlined /> },
   legal: { label: 'Juridique', color: '#0891B2', icon: <SafetyCertificateOutlined /> },
-  souscriptions: { label: 'Souscriptions', color: '#059669', icon: <FileTextOutlined /> },
+  souscriptions: { label: 'Souscriptions', color: '#0284C7', icon: <FileTextOutlined /> },
   appels_fonds: { label: 'Appels de fonds', color: '#D97706', icon: <BankOutlined /> },
-  fiscalite: { label: 'Fiscalité', color: '#DC2626', icon: <AuditOutlined /> },
+  fiscalite: { label: 'Fiscalité', color: '#BE185D', icon: <AuditOutlined /> },
   distributions: { label: 'Distributions', color: '#7C3AED', icon: <DollarOutlined /> },
 };
 
 const FILE_TYPES: Record<string, { bg: string; color: string; icon: ReactNode }> = {
-  PDF: { bg: '#FEE2E2', color: '#DC2626', icon: <FilePdfOutlined /> },
-  XLSX: { bg: '#DCFCE7', color: '#059669', icon: <FileExcelOutlined /> },
-  DOCX: { bg: '#DBEAFE', color: '#2563EB', icon: <FileWordOutlined /> },
+  PDF: { bg: '#FFF7ED', color: '#B45309', icon: <FilePdfOutlined /> },
+  XLSX: { bg: '#F0FDFA', color: '#0F766E', icon: <FileExcelOutlined /> },
+  DOCX: { bg: '#EEF2FF', color: '#4338CA', icon: <FileWordOutlined /> },
 };
 
 const MOCK_VERSIONS = [
@@ -51,6 +51,11 @@ const MOCK_VERSIONS = [
 interface TreeSelection {
   fund: string | null;
   category: string | null;
+  year: string | null;
+}
+
+function getYear(addedAt: string): string {
+  return addedAt.split('/')[2];
 }
 
 function FileTypeIcon({ type, size = 20 }: { type: string; size?: number }) {
@@ -86,26 +91,29 @@ function NewDot() {
   return (
     <span className="doc-new-pulse" style={{
       display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-      background: '#22C55E', flexShrink: 0,
+      background: '#3B82F6', flexShrink: 0,
     }} />
   );
 }
 
-function Breadcrumb({ selection, onNavigate }: {
+function BreadcrumbNav({ selection, onNavigate }: {
   selection: TreeSelection;
   onNavigate: (sel: TreeSelection) => void;
 }) {
   const parts: { label: string; onClick: () => void }[] = [
-    { label: 'Tous les documents', onClick: () => onNavigate({ fund: null, category: null }) },
+    { label: 'Tous les documents', onClick: () => onNavigate({ fund: null, category: null, year: null }) },
   ];
   if (selection.fund) {
-    parts.push({ label: selection.fund, onClick: () => onNavigate({ fund: selection.fund, category: null }) });
+    parts.push({ label: selection.fund, onClick: () => onNavigate({ fund: selection.fund, category: null, year: null }) });
   }
   if (selection.category && CATEGORIES[selection.category]) {
-    parts.push({ label: CATEGORIES[selection.category].label, onClick: () => {} });
+    parts.push({ label: CATEGORIES[selection.category].label, onClick: () => onNavigate({ fund: selection.fund, category: selection.category, year: null }) });
+  }
+  if (selection.year) {
+    parts.push({ label: selection.year, onClick: () => {} });
   }
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, flexWrap: 'wrap' }}>
       {parts.map((p, i) => (
         <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {i > 0 && <RightOutlined style={{ fontSize: 9, color: 'var(--ih-text-secondary)' }} />}
@@ -125,30 +133,34 @@ function Breadcrumb({ selection, onNavigate }: {
   );
 }
 
-function TreePanel({ documents, selection, onSelect, expandedFunds, onToggleFund }: {
+type TreeData = Map<string, Map<string, Map<string, number>>>;
+
+function TreePanel({ documents, selection, onSelect, expandedKeys, onToggleKey }: {
   documents: Document[];
   selection: TreeSelection;
   onSelect: (sel: TreeSelection) => void;
-  expandedFunds: Set<string>;
-  onToggleFund: (fund: string) => void;
+  expandedKeys: Set<string>;
+  onToggleKey: (key: string) => void;
 }) {
-  const tree = useMemo(() => {
-    const fundMap = new Map<string, Map<string, number>>();
+  const tree: TreeData = useMemo(() => {
+    const data: TreeData = new Map();
     for (const doc of documents) {
-      if (!fundMap.has(doc.fund)) fundMap.set(doc.fund, new Map());
-      const cats = fundMap.get(doc.fund)!;
-      cats.set(doc.category, (cats.get(doc.category) ?? 0) + 1);
+      if (!data.has(doc.fund)) data.set(doc.fund, new Map());
+      const cats = data.get(doc.fund)!;
+      if (!cats.has(doc.category)) cats.set(doc.category, new Map());
+      const years = cats.get(doc.category)!;
+      const year = getYear(doc.addedAt);
+      years.set(year, (years.get(year) ?? 0) + 1);
     }
-    return fundMap;
+    return data;
   }, [documents]);
 
   const newCount = useMemo(() => documents.filter(d => d.isNew).length, [documents]);
-
-  const isRootActive = !selection.fund && !selection.category;
+  const isRootActive = !selection.fund && !selection.category && !selection.year;
 
   return (
     <div style={{
-      width: 260, flexShrink: 0,
+      width: 270, flexShrink: 0,
       background: 'var(--ih-bg-card)', borderRadius: 12,
       border: '1px solid var(--ih-border)', overflow: 'hidden',
       display: 'flex', flexDirection: 'column',
@@ -160,10 +172,10 @@ function TreePanel({ documents, selection, onSelect, expandedFunds, onToggleFund
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 8 }}>
-        {/* Root: All documents */}
+        {/* Root */}
         <div
           className="doc-tree-item"
-          onClick={() => onSelect({ fund: null, category: null })}
+          onClick={() => onSelect({ fund: null, category: null, year: null })}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '8px 16px', fontSize: 13,
@@ -176,27 +188,27 @@ function TreePanel({ documents, selection, onSelect, expandedFunds, onToggleFund
           <InboxOutlined style={{ fontSize: 15 }} />
           <span style={{ flex: 1 }}>Tous les documents</span>
           <span style={{ fontSize: 12, color: 'var(--ih-text-secondary)', fontWeight: 400 }}>{documents.length}</span>
-          {newCount > 0 && (
-            <Badge count={newCount} size="small" style={{ backgroundColor: '#22C55E' }} />
-          )}
+          {newCount > 0 && <Badge count={newCount} size="small" style={{ backgroundColor: '#3B82F6' }} />}
         </div>
 
         <div style={{ height: 1, background: 'var(--ih-border)', margin: '6px 16px' }} />
 
-        {/* Fund nodes */}
+        {/* Level 2: Funds */}
         {Array.from(tree.entries()).map(([fund, cats]) => {
-          const isExpanded = expandedFunds.has(fund);
-          const isFundActive = selection.fund === fund && !selection.category;
-          const fundTotal = Array.from(cats.values()).reduce((s, c) => s + c, 0);
+          const fundKey = `f:${fund}`;
+          const isFundExpanded = expandedKeys.has(fundKey);
+          const isFundActive = selection.fund === fund && !selection.category && !selection.year;
+          const fundTotal = Array.from(cats.values()).reduce((s, years) => s + Array.from(years.values()).reduce((a, b) => a + b, 0), 0);
           const fundNewCount = documents.filter(d => d.fund === fund && d.isNew).length;
 
           return (
             <div key={fund}>
+              {/* Fund row */}
               <div
                 className="doc-tree-item"
                 onClick={() => {
-                  onToggleFund(fund);
-                  onSelect({ fund, category: null });
+                  onToggleKey(fundKey);
+                  onSelect({ fund, category: null, year: null });
                 }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -207,49 +219,90 @@ function TreePanel({ documents, selection, onSelect, expandedFunds, onToggleFund
                   borderLeft: isFundActive ? '3px solid var(--ih-primary)' : '3px solid transparent',
                 }}
               >
-                <span style={{ fontSize: 10, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ih-text-secondary)', transition: 'transform 0.2s ease', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                <span style={{ fontSize: 10, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ih-text-secondary)', transition: 'transform 0.2s ease', transform: isFundExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
                   <RightOutlined />
                 </span>
-                {isExpanded ? <FolderOpenOutlined style={{ fontSize: 14, color: '#D97706' }} /> : <FolderOutlined style={{ fontSize: 14, color: '#D97706' }} />}
+                {isFundExpanded ? <FolderOpenOutlined style={{ fontSize: 14, color: '#D97706' }} /> : <FolderOutlined style={{ fontSize: 14, color: '#D97706' }} />}
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fund}</span>
                 <span style={{ fontSize: 12, color: 'var(--ih-text-secondary)', fontWeight: 400 }}>{fundTotal}</span>
                 {fundNewCount > 0 && <NewDot />}
               </div>
 
-              {/* Categories */}
-              <div
-                className="doc-tree-children"
-                style={{
-                  maxHeight: isExpanded ? 300 : 0,
-                  opacity: isExpanded ? 1 : 0,
-                }}
-              >
-                {Array.from(cats.entries()).map(([cat, count]) => {
+              {/* Level 3: Categories */}
+              <div className="doc-tree-children" style={{ maxHeight: isFundExpanded ? 800 : 0, opacity: isFundExpanded ? 1 : 0 }}>
+                {Array.from(cats.entries()).map(([cat, years]) => {
                   const catConfig = CATEGORIES[cat];
                   if (!catConfig) return null;
-                  const isCatActive = selection.fund === fund && selection.category === cat;
+                  const catKey = `c:${fund}:${cat}`;
+                  const isCatExpanded = expandedKeys.has(catKey);
+                  const isCatActive = selection.fund === fund && selection.category === cat && !selection.year;
+                  const catTotal = Array.from(years.values()).reduce((a, b) => a + b, 0);
                   const catNewCount = documents.filter(d => d.fund === fund && d.category === cat && d.isNew).length;
+                  const sortedYears = Array.from(years.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+                  const hasMultipleYears = sortedYears.length > 1;
+
                   return (
-                    <div
-                      key={cat}
-                      className="doc-tree-item"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelect({ fund, category: cat });
-                      }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '6px 12px 6px 50px', fontSize: 12.5,
-                        fontWeight: isCatActive ? 600 : 400,
-                        color: isCatActive ? catConfig.color : 'var(--ih-text-secondary)',
-                        background: isCatActive ? catConfig.color + '0A' : 'transparent',
-                        borderLeft: isCatActive ? `3px solid ${catConfig.color}` : '3px solid transparent',
-                      }}
-                    >
-                      <span style={{ color: catConfig.color, fontSize: 12 }}>{catConfig.icon}</span>
-                      <span style={{ flex: 1 }}>{catConfig.label}</span>
-                      <span style={{ fontSize: 11, color: 'var(--ih-text-secondary)', fontWeight: 400 }}>{count}</span>
-                      {catNewCount > 0 && <NewDot />}
+                    <div key={cat}>
+                      <div
+                        className="doc-tree-item"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (hasMultipleYears) onToggleKey(catKey);
+                          onSelect({ fund, category: cat, year: null });
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          padding: '6px 12px 6px 44px', fontSize: 12.5,
+                          fontWeight: isCatActive ? 600 : 400,
+                          color: isCatActive ? catConfig.color : 'var(--ih-text-secondary)',
+                          background: isCatActive ? catConfig.color + '0A' : 'transparent',
+                          borderLeft: isCatActive ? `3px solid ${catConfig.color}` : '3px solid transparent',
+                        }}
+                      >
+                        {hasMultipleYears && (
+                          <span style={{ fontSize: 8, width: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ih-text-secondary)', transition: 'transform 0.2s ease', transform: isCatExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                            <RightOutlined />
+                          </span>
+                        )}
+                        {!hasMultipleYears && <span style={{ width: 12 }} />}
+                        <span style={{ color: catConfig.color, fontSize: 12, flexShrink: 0 }}>{catConfig.icon}</span>
+                        <span style={{ flex: 1 }}>{catConfig.label}</span>
+                        <span style={{ fontSize: 11, color: 'var(--ih-text-secondary)', fontWeight: 400 }}>{catTotal}</span>
+                        {catNewCount > 0 && <NewDot />}
+                      </div>
+
+                      {/* Level 4: Years */}
+                      {hasMultipleYears && (
+                        <div className="doc-tree-children" style={{ maxHeight: isCatExpanded ? 400 : 0, opacity: isCatExpanded ? 1 : 0 }}>
+                          {sortedYears.map(([year, count]) => {
+                            const isYearActive = selection.fund === fund && selection.category === cat && selection.year === year;
+                            const yearNewCount = documents.filter(d => d.fund === fund && d.category === cat && getYear(d.addedAt) === year && d.isNew).length;
+                            return (
+                              <div
+                                key={year}
+                                className="doc-tree-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSelect({ fund, category: cat, year });
+                                }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: 6,
+                                  padding: '5px 12px 5px 72px', fontSize: 12,
+                                  fontWeight: isYearActive ? 600 : 400,
+                                  color: isYearActive ? catConfig.color : 'var(--ih-text-secondary)',
+                                  background: isYearActive ? catConfig.color + '08' : 'transparent',
+                                  borderLeft: isYearActive ? `3px solid ${catConfig.color}` : '3px solid transparent',
+                                }}
+                              >
+                                <CalendarOutlined style={{ fontSize: 11, flexShrink: 0 }} />
+                                <span style={{ flex: 1 }}>{year}</span>
+                                <span style={{ fontSize: 11, fontWeight: 400 }}>{count}</span>
+                                {yearNewCount > 0 && <NewDot />}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -281,29 +334,19 @@ function DocumentCard({ doc, isSelected, onSelect, onPreview }: {
         position: 'relative',
       }}
     >
-      {/* Color stripe */}
       <div style={{ height: 4, background: fileType.color }} />
 
-      {/* Checkbox */}
-      <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Checkbox
-          checked={isSelected}
-          onChange={(e) => onSelect(doc.id, e.target.checked)}
-        />
+      <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2 }} onClick={(e) => e.stopPropagation()}>
+        <Checkbox checked={isSelected} onChange={(e) => onSelect(doc.id, e.target.checked)} />
       </div>
 
-      {/* New indicator */}
       {doc.isNew && (
         <div style={{ position: 'absolute', top: 12, right: 12 }}>
           <NewDot />
         </div>
       )}
 
-      {/* Body */}
       <div style={{ padding: '20px 16px 16px' }}>
-        {/* File icon */}
         <div style={{
           width: 48, height: 48, borderRadius: 12,
           background: fileType.bg, color: fileType.color,
@@ -313,7 +356,6 @@ function DocumentCard({ doc, isSelected, onSelect, onPreview }: {
           {fileType.icon}
         </div>
 
-        {/* Title */}
         <div style={{
           fontWeight: 600, fontSize: 13, lineHeight: '18px',
           color: 'var(--ih-text-primary)', marginBottom: 8,
@@ -324,12 +366,10 @@ function DocumentCard({ doc, isSelected, onSelect, onPreview }: {
           {doc.name}
         </div>
 
-        {/* Category tag */}
         <div style={{ marginBottom: 10 }}>
           <CategoryTag category={doc.category} />
         </div>
 
-        {/* Metadata */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           fontSize: 11, color: 'var(--ih-text-secondary)',
@@ -352,7 +392,6 @@ function DocumentListRow({ doc, isSelected, onSelect, onPreview, isActive }: {
   onPreview: (doc: Document) => void;
   isActive: boolean;
 }) {
-  const fileType = FILE_TYPES[doc.type] ?? FILE_TYPES.PDF;
   return (
     <div
       className="doc-list-row"
@@ -366,10 +405,7 @@ function DocumentListRow({ doc, isSelected, onSelect, onPreview, isActive }: {
       }}
     >
       <div onClick={(e) => e.stopPropagation()}>
-        <Checkbox
-          checked={isSelected}
-          onChange={(e) => onSelect(doc.id, e.target.checked)}
-        />
+        <Checkbox checked={isSelected} onChange={(e) => onSelect(doc.id, e.target.checked)} />
       </div>
 
       <FileTypeIcon type={doc.type} size={18} />
@@ -423,7 +459,6 @@ function PreviewPanel({ doc, onClose }: { doc: Document; onClose: () => void }) 
         overflow: 'hidden', display: 'flex', flexDirection: 'column',
       }}
     >
-      {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 16px', borderBottom: '1px solid var(--ih-border)',
@@ -431,14 +466,10 @@ function PreviewPanel({ doc, onClose }: { doc: Document; onClose: () => void }) 
         <Typography.Text style={{ fontWeight: 600, fontSize: 13, color: 'var(--ih-text-secondary)' }}>
           Détails du document
         </Typography.Text>
-        <CloseOutlined
-          onClick={onClose}
-          style={{ fontSize: 14, color: 'var(--ih-text-secondary)', cursor: 'pointer' }}
-        />
+        <CloseOutlined onClick={onClose} style={{ fontSize: 14, color: 'var(--ih-text-secondary)', cursor: 'pointer' }} />
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-        {/* Large file type visual */}
         <div style={{
           width: '100%', height: 120, borderRadius: 12,
           background: `linear-gradient(135deg, ${fileType.bg}, ${fileType.color}15)`,
@@ -448,12 +479,10 @@ function PreviewPanel({ doc, onClose }: { doc: Document; onClose: () => void }) 
           {fileType.icon}
         </div>
 
-        {/* Document name */}
         <Typography.Title level={5} style={{ margin: '0 0 12px', fontSize: 15, lineHeight: '22px' }}>
           {doc.name}
         </Typography.Title>
 
-        {/* Tags */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
           {cat && <CategoryTag category={doc.category} />}
           <span style={{
@@ -467,7 +496,6 @@ function PreviewPanel({ doc, onClose }: { doc: Document; onClose: () => void }) 
           </span>
         </div>
 
-        {/* Metadata grid */}
         <div style={{
           background: '#F9FAFB', borderRadius: 10, padding: 14,
           display: 'flex', flexDirection: 'column', gap: 10,
@@ -485,7 +513,6 @@ function PreviewPanel({ doc, onClose }: { doc: Document; onClose: () => void }) 
           ))}
         </div>
 
-        {/* Actions */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
           <Button type="primary" icon={<DownloadOutlined />} style={{ flex: 1 }}>
             Télécharger
@@ -498,7 +525,6 @@ function PreviewPanel({ doc, onClose }: { doc: Document; onClose: () => void }) 
           </Tooltip>
         </div>
 
-        {/* Version history */}
         <div>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6,
@@ -508,7 +534,7 @@ function PreviewPanel({ doc, onClose }: { doc: Document; onClose: () => void }) 
             <ClockCircleOutlined />
             Historique des versions
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             {MOCK_VERSIONS.map((v, i) => (
               <div key={v.version} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
@@ -552,18 +578,10 @@ function BulkActionBar({ count, onClear }: { count: number; onClear: () => void 
     }}>
       <span style={{ fontWeight: 600 }}>{count} document{count > 1 ? 's' : ''} sélectionné{count > 1 ? 's' : ''}</span>
       <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.3)' }} />
-      <Button
-        size="small"
-        icon={<DownloadOutlined />}
-        style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontWeight: 500 }}
-      >
+      <Button size="small" icon={<DownloadOutlined />} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontWeight: 500 }}>
         Télécharger tout
       </Button>
-      <Button
-        size="small"
-        icon={<ShareAltOutlined />}
-        style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontWeight: 500 }}
-      >
+      <Button size="small" icon={<ShareAltOutlined />} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontWeight: 500 }}>
         Partager
       </Button>
       <CloseOutlined onClick={onClear} style={{ cursor: 'pointer', fontSize: 13, opacity: 0.7 }} />
@@ -578,9 +596,9 @@ function QuickFilters({ active, onSelect, counts }: {
 }) {
   const filters = [
     { key: 'all', label: 'Tous', count: counts.all },
-    { key: 'new', label: 'Nouveaux', count: counts.new, dotColor: '#22C55E' },
-    { key: 'PDF', label: 'PDF', count: counts.PDF, dotColor: '#DC2626' },
-    { key: 'XLSX', label: 'XLSX', count: counts.XLSX, dotColor: '#059669' },
+    { key: 'new', label: 'Nouveaux', count: counts.new, dotColor: '#3B82F6' },
+    { key: 'PDF', label: 'PDF', count: counts.PDF, dotColor: '#B45309' },
+    { key: 'XLSX', label: 'XLSX', count: counts.XLSX, dotColor: '#0F766E' },
   ];
 
   return (
@@ -606,10 +624,7 @@ function QuickFilters({ active, onSelect, counts }: {
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: f.dotColor }} />
             )}
             {f.label}
-            <span style={{
-              fontSize: 11, fontWeight: 600,
-              opacity: isActive ? 0.8 : 0.6,
-            }}>
+            <span style={{ fontSize: 11, fontWeight: 600, opacity: isActive ? 0.8 : 0.6 }}>
               {f.count}
             </span>
           </div>
@@ -620,19 +635,22 @@ function QuickFilters({ active, onSelect, counts }: {
 }
 
 export function DocumentExplorer({ documents }: DocumentExplorerProps) {
-  const [selection, setSelection] = useState<TreeSelection>({ fund: null, category: null });
-  const [expandedFunds, setExpandedFunds] = useState<Set<string>>(() => new Set(Array.from(new Set(documents.map(d => d.fund))).slice(0, 1)));
+  const [selection, setSelection] = useState<TreeSelection>({ fund: null, category: null, year: null });
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(() => {
+    const first = documents[0]?.fund;
+    return first ? new Set([`f:${first}`]) : new Set();
+  });
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
   const [quickFilter, setQuickFilter] = useState('all');
   const [search, setSearch] = useState('');
 
-  const toggleFund = useCallback((fund: string) => {
-    setExpandedFunds(prev => {
+  const toggleKey = useCallback((key: string) => {
+    setExpandedKeys(prev => {
       const next = new Set(prev);
-      if (next.has(fund)) next.delete(fund);
-      else next.add(fund);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }, []);
@@ -649,18 +667,12 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
       );
     }
 
-    if (selection.fund) {
-      result = result.filter(d => d.fund === selection.fund);
-    }
-    if (selection.category) {
-      result = result.filter(d => d.category === selection.category);
-    }
+    if (selection.fund) result = result.filter(d => d.fund === selection.fund);
+    if (selection.category) result = result.filter(d => d.category === selection.category);
+    if (selection.year) result = result.filter(d => getYear(d.addedAt) === selection.year);
 
-    if (quickFilter === 'new') {
-      result = result.filter(d => d.isNew);
-    } else if (quickFilter === 'PDF' || quickFilter === 'XLSX') {
-      result = result.filter(d => d.type === quickFilter);
-    }
+    if (quickFilter === 'new') result = result.filter(d => d.isNew);
+    else if (quickFilter === 'PDF' || quickFilter === 'XLSX') result = result.filter(d => d.type === quickFilter);
 
     return result;
   }, [documents, selection, quickFilter, search]);
@@ -669,6 +681,7 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
     let base = documents;
     if (selection.fund) base = base.filter(d => d.fund === selection.fund);
     if (selection.category) base = base.filter(d => d.category === selection.category);
+    if (selection.year) base = base.filter(d => getYear(d.addedAt) === selection.year);
     if (search) {
       const q = search.toLowerCase();
       base = base.filter(d =>
@@ -697,7 +710,6 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
   return (
     <div style={{ position: 'relative' }}>
       <div style={{ display: 'flex', gap: 12, minHeight: 500 }}>
-        {/* Tree panel */}
         <TreePanel
           documents={documents}
           selection={selection}
@@ -706,11 +718,10 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
             setQuickFilter('all');
             setPreviewDoc(null);
           }}
-          expandedFunds={expandedFunds}
-          onToggleFund={toggleFund}
+          expandedKeys={expandedKeys}
+          onToggleKey={toggleKey}
         />
 
-        {/* Main content */}
         <div style={{
           flex: 1, minWidth: 0,
           background: 'var(--ih-bg-card)', borderRadius: 12,
@@ -722,9 +733,8 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
             padding: '14px 16px', borderBottom: '1px solid var(--ih-border)',
             display: 'flex', flexDirection: 'column', gap: 12,
           }}>
-            {/* Top row: breadcrumb + search + view toggle */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Breadcrumb selection={selection} onNavigate={setSelection} />
+              <BreadcrumbNav selection={selection} onNavigate={setSelection} />
               <div style={{ flex: 1 }} />
               <Input
                 prefix={<SearchOutlined style={{ color: 'var(--ih-text-secondary)' }} />}
@@ -735,10 +745,7 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ width: 200, borderRadius: 8 }}
               />
-              <div style={{
-                display: 'flex', background: '#F3F4F6', borderRadius: 8,
-                padding: 2, gap: 2,
-              }}>
+              <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 8, padding: 2, gap: 2 }}>
                 <Tooltip title="Vue grille">
                   <div
                     onClick={() => setViewMode('grid')}
@@ -769,18 +776,14 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
                 </Tooltip>
               </div>
             </div>
-            {/* Quick filters */}
             <QuickFilters active={quickFilter} onSelect={setQuickFilter} counts={filterCounts} />
           </div>
 
-          {/* Document area */}
+          {/* Documents */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {filtered.length === 0 ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 40 }}>
-                <Empty
-                  description="Aucun document trouvé"
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                />
+                <Empty description="Aucun document trouvé" image={Empty.PRESENTED_IMAGE_SIMPLE} />
               </div>
             ) : viewMode === 'grid' ? (
               <div style={{
@@ -800,7 +803,6 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
               </div>
             ) : (
               <div>
-                {/* List header */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '8px 16px', borderBottom: '1px solid var(--ih-border)',
@@ -829,13 +831,9 @@ export function DocumentExplorer({ documents }: DocumentExplorerProps) {
           </div>
         </div>
 
-        {/* Preview panel */}
-        {previewDoc && (
-          <PreviewPanel doc={previewDoc} onClose={() => setPreviewDoc(null)} />
-        )}
+        {previewDoc && <PreviewPanel doc={previewDoc} onClose={() => setPreviewDoc(null)} />}
       </div>
 
-      {/* Bulk action bar */}
       <BulkActionBar count={selectedIds.size} onClear={() => setSelectedIds(new Set())} />
     </div>
   );

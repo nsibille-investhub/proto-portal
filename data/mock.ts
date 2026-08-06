@@ -160,24 +160,42 @@ export const portfolioKpis = {
 };
 
 export const documents = [
+  // Impact Growth II — Reporting
   { id: 1, fund: 'Impact Growth II', category: 'reporting', name: 'Rapport trimestriel T1 2026', type: 'PDF', size: '2.4 Mo', addedAt: '15/04/2026', isNew: true },
   { id: 2, fund: 'Impact Growth II', category: 'reporting', name: 'Rapport annuel 2025', type: 'PDF', size: '8.1 Mo', addedAt: '28/02/2026', isNew: false },
   { id: 3, fund: 'Impact Growth II', category: 'reporting', name: 'Factsheet Q1 2026', type: 'PDF', size: '540 Ko', addedAt: '15/04/2026', isNew: true },
+  { id: 23, fund: 'Impact Growth II', category: 'reporting', name: 'Rapport annuel 2024', type: 'PDF', size: '7.8 Mo', addedAt: '01/03/2025', isNew: false },
+  { id: 24, fund: 'Impact Growth II', category: 'reporting', name: 'Factsheet Q4 2025', type: 'PDF', size: '510 Ko', addedAt: '15/01/2026', isNew: false },
+  // Impact Growth II — Juridique
   { id: 4, fund: 'Impact Growth II', category: 'legal', name: 'DICI Impact Growth II', type: 'PDF', size: '1.2 Mo', addedAt: '10/01/2026', isNew: false },
-  { id: 5, fund: 'Impact Growth II', category: 'legal', name: 'Règlement du fonds', type: 'PDF', size: '890 Ko', addedAt: '10/01/2026', isNew: false },
+  { id: 5, fund: 'Impact Growth II', category: 'legal', name: 'Règlement du fonds', type: 'PDF', size: '890 Ko', addedAt: '10/01/2025', isNew: false },
+  // Impact Growth II — Souscriptions
   { id: 6, fund: 'Impact Growth II', category: 'souscriptions', name: 'Bulletin de souscription Part A', type: 'PDF', size: '320 Ko', addedAt: '12/04/2026', isNew: true },
-  { id: 7, fund: 'Impact Growth II', category: 'souscriptions', name: 'Attestation de souscription', type: 'PDF', size: '180 Ko', addedAt: '12/04/2026', isNew: false },
+  { id: 7, fund: 'Impact Growth II', category: 'souscriptions', name: 'Attestation de souscription', type: 'PDF', size: '180 Ko', addedAt: '12/04/2025', isNew: false },
+  // Impact Growth II — Appels de fonds
   { id: 8, fund: 'Impact Growth II', category: 'appels_fonds', name: "Avis d'appel de fonds #3", type: 'PDF', size: '275 Ko', addedAt: '01/04/2026', isNew: true },
+  { id: 25, fund: 'Impact Growth II', category: 'appels_fonds', name: "Avis d'appel de fonds #2", type: 'PDF', size: '260 Ko', addedAt: '15/10/2025', isNew: false },
+  { id: 26, fund: 'Impact Growth II', category: 'appels_fonds', name: "Avis d'appel de fonds #1", type: 'PDF', size: '245 Ko', addedAt: '01/06/2025', isNew: false },
+  // Flex II — Reporting
   { id: 9, fund: 'Flex II', category: 'reporting', name: 'Reporting mensuel Mars 2026', type: 'XLSX', size: '1.8 Mo', addedAt: '05/04/2026', isNew: true },
   { id: 10, fund: 'Flex II', category: 'reporting', name: 'Rapport semestriel S2 2025', type: 'PDF', size: '5.3 Mo', addedAt: '15/01/2026', isNew: false },
+  { id: 27, fund: 'Flex II', category: 'reporting', name: 'Reporting mensuel Décembre 2025', type: 'XLSX', size: '1.6 Mo', addedAt: '10/01/2026', isNew: false },
+  { id: 28, fund: 'Flex II', category: 'reporting', name: 'Rapport semestriel S1 2025', type: 'PDF', size: '4.9 Mo', addedAt: '20/07/2025', isNew: false },
+  // Flex II — Souscriptions
   { id: 11, fund: 'Flex II', category: 'souscriptions', name: 'Confirmation de souscription', type: 'PDF', size: '210 Ko', addedAt: '03/02/2025', isNew: false },
+  // Flex II — Fiscalité
   { id: 12, fund: 'Flex II', category: 'fiscalite', name: 'IFU 2025', type: 'PDF', size: '420 Ko', addedAt: '15/03/2026', isNew: true },
   { id: 13, fund: 'Flex II', category: 'fiscalite', name: 'Attestation fiscale 2025', type: 'PDF', size: '185 Ko', addedAt: '15/03/2026', isNew: false },
+  { id: 29, fund: 'Flex II', category: 'fiscalite', name: 'IFU 2024', type: 'PDF', size: '395 Ko', addedAt: '20/03/2025', isNew: false },
+  // Flex II — Distributions
   { id: 14, fund: 'Flex II', category: 'distributions', name: 'Avis de distribution Q4 2025', type: 'PDF', size: '290 Ko', addedAt: '20/01/2026', isNew: false },
+  { id: 30, fund: 'Flex II', category: 'distributions', name: 'Avis de distribution Q2 2025', type: 'PDF', size: '275 Ko', addedAt: '15/07/2025', isNew: false },
+  // Venture I
   { id: 15, fund: 'Venture I', category: 'reporting', name: 'Rapport annuel 2025', type: 'PDF', size: '6.7 Mo', addedAt: '01/03/2026', isNew: false },
   { id: 16, fund: 'Venture I', category: 'legal', name: 'Statuts du fonds', type: 'PDF', size: '1.5 Mo', addedAt: '15/06/2022', isNew: false },
   { id: 17, fund: 'Venture I', category: 'appels_fonds', name: 'Récapitulatif appels de fonds', type: 'XLSX', size: '980 Ko', addedAt: '10/02/2026', isNew: false },
   { id: 18, fund: 'Venture I', category: 'distributions', name: 'Avis de distribution annuelle 2025', type: 'PDF', size: '310 Ko', addedAt: '15/02/2026', isNew: false },
+  // Fonds Secondaire
   { id: 19, fund: 'Fonds Secondaire', category: 'reporting', name: 'NAV Report Q1 2026', type: 'XLSX', size: '1.1 Mo', addedAt: '20/04/2026', isNew: true },
   { id: 20, fund: 'Fonds Secondaire', category: 'legal', name: "Notice d'information", type: 'PDF', size: '2.3 Mo', addedAt: '01/09/2025', isNew: false },
   { id: 21, fund: 'Fonds Secondaire', category: 'souscriptions', name: 'Bulletin de cession Part A', type: 'PDF', size: '340 Ko', addedAt: '15/05/2026', isNew: true },
